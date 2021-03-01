@@ -45,16 +45,7 @@ use curry;
 use JSON::MaybeUTF8 qw(:v1);
 use PerlIO;
 use Term::ANSIColor;
-
-require Log::Any;
-require Log::Any::Proxy;
-
-# Used for stringifying data more neatly than Data::Dumper might offer
-my $json = JSON::MaybeXS->new(
-    pretty          => 1,
-    canonical       => 1,
-    convert_blessed => 1,
-);
+use Log::Any qw($log);
 
 # The obvious way to handle this might be to provide our own proxy class:
 #     $Log::Any::OverrideDefaultProxyClass = 'Log::Any::Proxy::DERIV';
@@ -64,6 +55,22 @@ my $json = JSON::MaybeXS->new(
 # Rather than trying to deal with that, we just provide our own default:
 {
     no warnings 'redefine';
+
+    # Used for stringifying data more neatly than Data::Dumper might offer
+    my $json = JSON::MaybeXS->new(
+        # Multi-line for terminal output, single line if redirecting somewhere
+        pretty          => (-t STDERR),
+        # Be consistent
+        canonical       => 1,
+        # Try a bit harder to give useful output
+        convert_blessed => 1,
+    );
+
+    # We expect this to be loaded, but be explicit just in case - we'll be overriding
+    # one of the methods, so let's at least make sure it exists first
+    require Log::Any::Proxy;
+
+    # Mostly copied from Log::Any::Proxy
     *Log::Any::Proxy::_default_formatter = sub {
         my ( $cat, $lvl, $format, @params ) = @_;
         return $format->() if ref($format) eq 'CODE';
@@ -85,9 +92,12 @@ my $json = JSON::MaybeXS->new(
     };
 }
 
-use Log::Any qw($log);
-
+# Upgrade any `warn ...` lines to send through Log::Any.
 $SIG{__WARN__} = sub {
+    # We don't expect anything called from here to raise further warnings, but
+    # let's be safe and try to avoid any risk of recursion
+    local $SIG{__WARN__} = undef;
+
     chomp(my $msg = shift);
     $log->warn($msg);
 };
@@ -96,15 +106,21 @@ sub new {
     my ( $class, %args ) = @_;
     $args{colour} //= -t STDERR;
     my $self = $class->SUPER::new(sub { }, %args);
+
+    # There are other ways of running containers, but for now "in docker? generate JSON"
+    # is at least a starting point.
     $self->{in_container} = -r '/.dockerenv';
     unless($self->{in_container}) {
         $self->{fh} = path($0 . '.json.log')->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{fh}->autoflush(1);
     }
+
+    # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
     return $self;
 }
 
+# Simple mapping from severity levels to Term::ANSIColor definitions.
 our %SEVERITY_COLOUR = (
     trace    => [qw(grey12)],
     debug    => [qw(grey18)],
@@ -131,43 +147,52 @@ sub log_entry {
         STDERR->autoflush(1);
         $self->{has_stderr_utf8} = 1;
     }
+
+    # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
-    my @details = (
-        Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
-        uc(substr $data->{severity}, 0, 1),
-        "[$from]",
-        $data->{message},
-    );
-    my $txt = $self->{colour}
-    ? do {
-        my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
-        # Colour formatting codes applied at the start and end of each line, in case something else
-        # gets inbetween us and the output
-        local $Term::ANSIColor::EACHLINE = "\n";
-        my ($ts, $level, $from, @info) = @details;
-        join ' ',
-            colored(
-                $ts,
-                qw(bright_blue),
-            ),
-            colored(
-                $level,
-                @colours,
-            ),
-            colored(
-                $from,
-                qw(grey10)
-            ),
-            map {
+
+    my $txt = $self->{in_container} # docker tends to prefer JSON
+    ? encode_json_text($data)
+    : do {
+        # Start with the plain-text details
+        my @details = (
+            Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
+            uc(substr $data->{severity}, 0, 1),
+            "[$from]",
+            $data->{message},
+        );
+
+        # Apply colours if necessary...
+        $self->{colour}
+        ? do {
+            my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
+            # Colour formatting codes applied at the start and end of each line, in case something else
+            # gets inbetween us and the output
+            local $Term::ANSIColor::EACHLINE = "\n";
+            my ($ts, $level, $from, @info) = @details;
+            join ' ',
                 colored(
-                    $_,
+                    $ts,
+                    qw(bright_blue),
+                ),
+                colored(
+                    $level,
                     @colours,
                 ),
-            } @info
-    }
-    : $self->{in_container} # docker tends to prefer JSON
-    ? encode_json_text($data)
-    : join ' ', @details;
+                colored(
+                    $from,
+                    qw(grey10)
+                ),
+                map {
+                    colored(
+                        $_,
+                        @colours,
+                    ),
+                } @info
+        }
+        # ... but skip all that extra work if we're in non-colour mode
+        : join ' ', @details;
+    };
 
     # Regardless of the output, we always use newline separators
     STDERR->print(
