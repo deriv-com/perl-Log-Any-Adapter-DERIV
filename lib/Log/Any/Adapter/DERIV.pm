@@ -113,12 +113,13 @@ sub xx_structured {
 }
 
 our %SEVERITY_COLOUR = (
-    trace   => [qw(grey12)],
-    debug   => [qw(grey18)],
-    info    => [qw(green)],
-    warning => [qw(bright_yellow)],
-    error   => [qw(red bold)],
-    fatal   => [qw(red bold)],
+    trace    => [qw(grey12)],
+    debug    => [qw(grey18)],
+    info     => [qw(green)],
+    warning  => [qw(bright_yellow)],
+    error    => [qw(red bold)],
+    fatal    => [qw(red bold)],
+    critical => [qw(red bold)],
 );
 
 sub log_entry {
