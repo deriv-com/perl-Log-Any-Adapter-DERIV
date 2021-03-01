@@ -118,8 +118,8 @@ our %SEVERITY_COLOUR = (
 );
 
 sub log_entry {
-	my ($self, $data) = @_;
-	$self->{fh}->print(encode_json_text($data) . "\n");
+    my ($self, $data) = @_;
+    $self->{fh}->print(encode_json_text($data) . "\n");
     unless($self->{has_stderr_utf8}) {
         # We'd expect `encoding(utf-8-strict)` and `utf8` if someone's already applied binmode
         # for us, but implementation details in Perl may change those names slightly, and on
@@ -165,7 +165,7 @@ sub log_entry {
             } @info
     } : join ' ', @details;
 
-	STDERR->print(
+    STDERR->print(
         "$txt\n"
     );
 }
