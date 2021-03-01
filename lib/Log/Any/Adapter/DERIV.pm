@@ -1,4 +1,5 @@
 package Log::Any::Adapter::DERIV;
+# ABSTRACT: one company's example of a standardised logging setup
 
 use strict;
 use warnings;
