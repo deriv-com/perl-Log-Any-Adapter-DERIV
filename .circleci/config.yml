@@ -23,6 +23,8 @@ jobs:
       - run:
           name: Install deps
           command: |
+            export PERL5LIB=$(pwd)/deps/lib/perl5:$(pwd)/deps/lib/perl5/$(perl -MConfig -le'print $Config{archname}'):$PERL5LIB
+            export PATH=$(pwd)/deps/bin:$PATH
             cpanm -l deps --installdeps --with-develop -n .
             dzil listdeps --author | cpanm -l deps
       - save_cache:
@@ -56,6 +58,8 @@ jobs:
       - run:
           name: Install deps
           command: |
+              export PERL5LIB=$(pwd)/deps/lib/perl5:$(pwd)/deps/lib/perl5/$(perl -MConfig -le'print $Config{archname}'):$PERL5LIB
+              export PATH=$(pwd)/deps/bin:$PATH
               cpanm -l deps --installdeps --with-develop -n .
               dzil listdeps --author | cpanm -l deps
       - run:
