@@ -105,13 +105,6 @@ sub new {
     return $self;
 }
 
-# use Log::Any::Adapter;
-sub xx_structured {
-    my ($self, $level, $from, $msg, @data) = @_;
-    warn "structured...? @_";
-    return $msg;
-}
-
 our %SEVERITY_COLOUR = (
     trace    => [qw(grey12)],
     debug    => [qw(grey18)],
