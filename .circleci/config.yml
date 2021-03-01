@@ -24,6 +24,7 @@ jobs:
           name: Install deps
           command: |
             cpanm -l deps --installdeps --with-develop -n .
+            dzil authordeps | cpanm -l deps
       - save_cache:
           key: cpanfile-{{ arch }}-{{ checksum "/opt/perl.config" }}-{{ checksum "cpanfile" }}
           paths:
