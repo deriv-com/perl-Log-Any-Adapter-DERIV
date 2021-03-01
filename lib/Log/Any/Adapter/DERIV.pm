@@ -96,7 +96,11 @@ sub new {
     my ( $class, %args ) = @_;
     $args{colour} //= -t STDERR;
     my $self = $class->SUPER::new(sub { }, %args);
-    $self->{fh} = path($0 . '.json.log')->opena_utf8 or die 'unable to open log file - ' . $!;
+    $self->{in_container} = -r '/.dockerenv';
+    unless($self->{in_container}) {
+        $self->{fh} = path($0 . '.json.log')->opena_utf8 or die 'unable to open log file - ' . $!;
+        $self->{fh}->autoflush(1);
+    }
     $self->{code} = $self->curry::log_entry;
     return $self;
 }
@@ -119,7 +123,9 @@ our %SEVERITY_COLOUR = (
 
 sub log_entry {
     my ($self, $data) = @_;
-    $self->{fh}->print(encode_json_text($data) . "\n");
+
+    $self->{fh}->print(encode_json_text($data) . "\n") if $self->{fh};
+
     unless($self->{has_stderr_utf8}) {
         # We'd expect `encoding(utf-8-strict)` and `utf8` if someone's already applied binmode
         # for us, but implementation details in Perl may change those names slightly, and on
@@ -128,6 +134,7 @@ sub log_entry {
         # utf-flavoured in the mix.
         binmode STDERR, ':encoding(UTF-8)'
             unless grep /utf/i, PerlIO::get_layers(\*STDERR, output => 1);
+        STDERR->autoflush(1);
         $self->{has_stderr_utf8} = 1;
     }
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
@@ -163,8 +170,12 @@ sub log_entry {
                     @colours,
                 ),
             } @info
-    } : join ' ', @details;
+    }
+    : $self->{in_container} # docker tends to prefer JSON
+    ? encode_json_text($data)
+    : join ' ', @details;
 
+    # Regardless of the output, we always use newline separators
     STDERR->print(
         "$txt\n"
     );
