@@ -1,7 +1,7 @@
 requires 'curry', '>= 1.001000';
 requires 'JSON::MaybeUTF8', '>= 1.002';
 requires 'Log::Any', '>= 1.709';
-requires 'Log::Any::Adapter::Coderef', '>= 0.001';
+requires 'Log::Any::Adapter::Coderef', '>= 0.002';
 requires 'Path::Tiny', '>= 0.118';
 requires 'PerlIO', 0;
 requires 'Term::ANSIColor', '>= 5.01';
