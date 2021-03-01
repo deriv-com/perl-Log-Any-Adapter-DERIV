@@ -1,0 +1,55 @@
+{"pid":2960972,"severity":"trace","epoch":1614631354.98122,"host":"besar","stack":[],"message":"Trace level"}
+{"epoch":1614631354.98401,"pid":2960972,"severity":"debug","host":"besar","stack":[],"message":"Debug level, with simple hashref: {xyz => 123}"}
+{"stack":[],"message":"Info level","pid":2960972,"severity":"info","epoch":1614631354.9841,"host":"besar"}
+{"pid":2960972,"severity":"warning","epoch":1614631354.98414,"host":"besar","stack":[],"message":"Warning level"}
+{"stack":[],"message":"Warning level","epoch":1614631354.98418,"pid":2960972,"severity":"error","host":"besar"}
+{"stack":[],"message":"regular warn line","pid":2960972,"severity":"warning","epoch":1614631354.98422,"host":"besar"}
+{"stack":[],"message":"Fatal level","pid":2960972,"severity":"critical","epoch":1614631354.98432,"host":"besar"}
+{"epoch":1614631377.48356,"host":"besar","stack":[],"severity":"trace","message":"Trace level","pid":2961147}
+{"epoch":1614631377.48599,"host":"besar","message":"Debug level, with simple hashref: {xyz => 123}","pid":2961147,"severity":"debug","stack":[]}
+{"message":"Info level","pid":2961147,"stack":[],"severity":"info","epoch":1614631377.48605,"host":"besar"}
+{"pid":2961147,"message":"Warning level","stack":[],"severity":"warning","host":"besar","epoch":1614631377.4861}
+{"pid":2961147,"message":"Warning level","stack":[],"severity":"error","epoch":1614631377.48615,"host":"besar"}
+{"stack":[],"severity":"warning","message":"regular warn line","pid":2961147,"host":"besar","epoch":1614631377.48623}
+{"message":"Fatal level","pid":2961147,"severity":"critical","stack":[],"epoch":1614631377.48637,"host":"besar"}
+{"epoch":1614631394.01251,"stack":[],"message":"Trace level","severity":"trace","pid":2961254,"host":"besar"}
+{"severity":"debug","host":"besar","pid":2961254,"stack":[],"epoch":1614631394.01528,"message":"Debug level, with simple hashref: {xyz => 123}"}
+{"message":"Info level","epoch":1614631394.01538,"stack":[],"pid":2961254,"host":"besar","severity":"info"}
+{"host":"besar","pid":2961254,"severity":"warning","message":"Warning level","epoch":1614631394.01544,"stack":[]}
+{"host":"besar","pid":2961254,"severity":"error","message":"Warning level","epoch":1614631394.01549,"stack":[]}
+{"severity":"warning","pid":2961254,"host":"besar","stack":[],"epoch":1614631394.01553,"message":"regular warn line"}
+{"severity":"critical","pid":2961254,"host":"besar","epoch":1614631394.01564,"stack":[],"message":"Fatal level"}
+{"message":"Last message","stack":[],"epoch":1614631394.01568,"host":"besar","pid":2961254,"severity":"info"}
+{"epoch":1614631433.32748,"pid":2961429,"message":"Trace level","host":"besar","stack":[],"severity":"trace"}
+{"message":"Debug level, with simple hashref: {xyz => 123}","host":"besar","severity":"debug","stack":[],"epoch":1614631433.3302,"pid":2961429}
+{"pid":2961429,"epoch":1614631433.3303,"stack":[],"severity":"info","host":"besar","message":"Info level"}
+{"host":"besar","message":"Warning level","stack":[],"severity":"warning","epoch":1614631433.33037,"pid":2961429}
+{"severity":"error","stack":[],"host":"besar","message":"Warning level","epoch":1614631433.33044,"pid":2961429}
+{"epoch":1614631433.33052,"pid":2961429,"host":"besar","message":"regular warn line","severity":"warning","stack":[]}
+{"epoch":1614631433.33067,"pid":2961429,"message":"Fatal level","host":"besar","stack":[],"severity":"critical"}
+{"message":"Nested data structure","host":"besar","severity":"info","stack":[],"epoch":1614631433.33081,"pid":2961429}
+{"epoch":1614631440.37385,"message":"Trace level","pid":2961492,"stack":[],"severity":"trace","host":"besar"}
+{"pid":2961492,"stack":[],"severity":"debug","host":"besar","epoch":1614631440.37633,"message":"Debug level, with simple hashref: {xyz => 123}"}
+{"stack":[],"pid":2961492,"host":"besar","severity":"info","message":"Info level","epoch":1614631440.37639}
+{"message":"Warning level","epoch":1614631440.37644,"stack":[],"pid":2961492,"host":"besar","severity":"warning"}
+{"epoch":1614631440.37648,"message":"Warning level","severity":"error","host":"besar","pid":2961492,"stack":[]}
+{"epoch":1614631440.37651,"message":"regular warn line","severity":"warning","host":"besar","pid":2961492,"stack":[]}
+{"message":"Fatal level","epoch":1614631440.37661,"stack":[],"pid":2961492,"host":"besar","severity":"critical"}
+{"message":"Nested data structure {arrayref => [\"a\",\"b\",\"c\",\"d\",\"e\",\"f\"],hashref => {another => {hashref => \"here\"}}}","epoch":1614631440.3767,"host":"besar","severity":"info","stack":[],"pid":2961492}
+{"severity":"trace","host":"besar","epoch":1614631472.11894,"stack":[],"pid":2961663,"message":"Trace level"}
+{"host":"besar","severity":"debug","stack":[],"epoch":1614631472.1191,"message":"Debug level, with simple hashref: {\n     \"xyz\" : 123\n  }","pid":2961663}
+{"pid":2961663,"message":"Info level","epoch":1614631472.11916,"stack":[],"severity":"info","host":"besar"}
+{"message":"Warning level","pid":2961663,"host":"besar","severity":"warning","stack":[],"epoch":1614631472.1192}
+{"epoch":1614631472.11925,"stack":[],"host":"besar","severity":"error","message":"Warning level","pid":2961663}
+{"epoch":1614631472.1193,"stack":[],"severity":"warning","host":"besar","pid":2961663,"message":"regular warn line"}
+{"message":"Fatal level","pid":2961663,"epoch":1614631472.11936,"stack":[],"host":"besar","severity":"critical"}
+{"message":"Nested data structure {\n     \"arrayref\" : [\n        \"a\",\n        \"b\",\n        \"c\",\n        \"d\",\n        \"e\",\n        \"f\"\n     ],\n     \"hashref\" : {\n        \"another\" : {\n           \"hashref\" : \"here\"\n        }\n     }\n  }","pid":2961663,"stack":[],"epoch":1614631472.11941,"host":"besar","severity":"info"}
+{"message":"Trace level","stack":[],"pid":2961864,"epoch":1614631513.63996,"severity":"trace","host":"besar"}
+{"stack":[],"message":"Debug level, with simple hashref: {\n     \"xyz\" : 123\n  }","host":"besar","severity":"debug","epoch":1614631513.64011,"pid":2961864}
+{"epoch":1614631513.64017,"pid":2961864,"host":"besar","severity":"info","stack":[],"message":"Info level"}
+{"host":"besar","severity":"info","epoch":1614631513.64021,"pid":2961864,"stack":[{"line":14,"package":"main","file":"examples/log.pl","method":"example_sub"}],"message":"Info level"}
+{"stack":[],"message":"Warning level","host":"besar","severity":"warning","epoch":1614631513.64025,"pid":2961864}
+{"message":"Error level","stack":[],"host":"besar","severity":"error","pid":2961864,"epoch":1614631513.64029}
+{"pid":2961864,"epoch":1614631513.64033,"severity":"warning","host":"besar","message":"regular warn line","stack":[]}
+{"message":"Fatal level","stack":[],"severity":"critical","host":"besar","epoch":1614631513.64039,"pid":2961864}
+{"stack":[],"message":"Nested data structure {\n     \"arrayref\" : [\n        \"a\",\n        \"b\",\n        \"c\",\n        \"d\",\n        \"e\",\n        \"f\"\n     ],\n     \"hashref\" : {\n        \"another\" : {\n           \"hashref\" : \"here\"\n        }\n     }\n  }","severity":"info","host":"besar","epoch":1614631513.64044,"pid":2961864}
