@@ -4,7 +4,14 @@ package Log::Any::Adapter::DERIV;
 use strict;
 use warnings;
 
+# AUTHORITY
+our $VERSION = '0.001';
+
 use parent qw(Log::Any::Adapter::Coderef);
+
+use utf8;
+
+=encoding utf8
 
 =head1 NAME
 
