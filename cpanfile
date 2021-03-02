@@ -6,6 +6,7 @@ requires 'Path::Tiny', '>= 0.118';
 requires 'PerlIO', 0;
 requires 'Term::ANSIColor', '>= 5.01';
 requires 'Time::Moment', '>= 0.44';
+requires 'File::HomeDir', 0;
 
 on 'test' => sub {
     requires 'Test::More', '>= 0.98';

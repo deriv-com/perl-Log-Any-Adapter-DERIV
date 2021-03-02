@@ -19,7 +19,10 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
 
 =head1 DESCRIPTION
 
-B<This is extremely invasive>. It does the following, affecting global state in various ways:
+Applies some opinionated log handling rules for L<Log::Any>.
+
+B<This is extremely invasive>. It does the following, affecting global state
+in various ways:
 
 =over 4
 
@@ -29,13 +32,29 @@ B<This is extremely invasive>. It does the following, affecting global state in 
 
 =item * overrides the default L<Log::Any::Proxy> formatter to provide data as JSON
 
-=item * when stringifying, replaces some problematic objects with simplified versions
+=item * when stringifying, may replace some problematic objects with simplified versions
 
 =back
 
 An example of the string-replacement approach would be the event loop in asynchronous code:
 it's likely to have many components attached to it, and dumping that would effectively end up
-dumping the entire tree of useful objects in the process.
+dumping the entire tree of useful objects in the process. This is a planned future extension,
+not currently implemented.
+
+=head2 Why
+
+This is provided as a CPAN module as an example for dealing with multiple outputs and
+formatting. The existing L<Log::Any::Adapter> modules tend to cover one thing, and it's
+not immediately obvious how to extend formatting, or send data to multiple logging mechanisms
+at once.
+
+Although the module may not be directly useful, it is hoped that other teams may find
+parts of the code useful for their own logging requirements.
+
+There is a public repository on Github, anyone is welcome to fork that and implement
+their own version or make feature/bugfix suggestions if they seem generally useful:
+
+L<https://github.com/binary-com/perl-Log-Any-Adapter-DERIV>
 
 =cut
 
@@ -47,6 +66,27 @@ use PerlIO;
 use Term::ANSIColor;
 use Log::Any qw($log);
 
+# Used for stringifying data more neatly than Data::Dumper might offer
+our $JSON = JSON::MaybeXS->new(
+    # Multi-line for terminal output, single line if redirecting somewhere
+    pretty          => (-t STDERR),
+    # Be consistent
+    canonical       => 1,
+    # Try a bit harder to give useful output
+    convert_blessed => 1,
+);
+
+# Simple mapping from severity levels to Term::ANSIColor definitions.
+our %SEVERITY_COLOUR = (
+    trace    => [qw(grey12)],
+    debug    => [qw(grey18)],
+    info     => [qw(green)],
+    warning  => [qw(bright_yellow)],
+    error    => [qw(red bold)],
+    fatal    => [qw(red bold)],
+    critical => [qw(red bold)],
+);
+
 # The obvious way to handle this might be to provide our own proxy class:
 #     $Log::Any::OverrideDefaultProxyClass = 'Log::Any::Proxy::DERIV';
 # but the handling for proxy classes is somewhat opaque - and there's an ordering problem
@@ -55,16 +95,6 @@ use Log::Any qw($log);
 # Rather than trying to deal with that, we just provide our own default:
 {
     no warnings 'redefine';
-
-    # Used for stringifying data more neatly than Data::Dumper might offer
-    my $json = JSON::MaybeXS->new(
-        # Multi-line for terminal output, single line if redirecting somewhere
-        pretty          => (-t STDERR),
-        # Be consistent
-        canonical       => 1,
-        # Try a bit harder to give useful output
-        convert_blessed => 1,
-    );
 
     # We expect this to be loaded, but be explicit just in case - we'll be overriding
     # one of the methods, so let's at least make sure it exists first
@@ -77,7 +107,7 @@ use Log::Any qw($log);
 
         chomp(
             my @new_params = map {
-                eval { $json->encode($_) } // Log::Any::Proxy::_stringify_params($_)
+                eval { $JSON->encode($_) } // Log::Any::Proxy::_stringify_params($_)
             } @params
         );
         s{\n}{\n  }g for @new_params;
@@ -120,79 +150,88 @@ sub new {
     return $self;
 }
 
-# Simple mapping from severity levels to Term::ANSIColor definitions.
-our %SEVERITY_COLOUR = (
-    trace    => [qw(grey12)],
-    debug    => [qw(grey18)],
-    info     => [qw(green)],
-    warning  => [qw(bright_yellow)],
-    error    => [qw(red bold)],
-    fatal    => [qw(red bold)],
-    critical => [qw(red bold)],
-);
+sub apply_filehandle_utf8 {
+    my ($class, $fh) = @_;
+    # We'd expect `encoding(utf-8-strict)` and `utf8` if someone's already applied binmode
+    # for us, but implementation details in Perl may change those names slightly, and on
+    # some platforms (Windows?) there's also a chance of one of the UTF16LE/BE variants,
+    # so we make this check quite lax and skip binmode if there's anything even slightly
+    # utf-flavoured in the mix.
+    $fh->binmode(':encoding(UTF-8)')
+        unless grep /utf/i, PerlIO::get_layers($fh, output => 1);
+    $fh->autoflush(1);
+}
 
-sub log_entry {
-    my ($self, $data) = @_;
+sub format_line {
+    my ($class, $data, $opts) = @_;
+    # With international development teams, no matter which spelling we choose
+    # someone's going to get this wrong sooner or later... or to put another
+    # way, we got country *and* western.
+    $opts->{colour} = $opts->{color} || $opts->{colour};
 
-    $self->{fh}->print(encode_json_text($data) . "\n") if $self->{fh};
-
-    unless($self->{has_stderr_utf8}) {
-        # We'd expect `encoding(utf-8-strict)` and `utf8` if someone's already applied binmode
-        # for us, but implementation details in Perl may change those names slightly, and on
-        # some platforms (Windows?) there's also a chance of one of the UTF16LE/BE variants,
-        # so we make this check quite lax and skip binmode if there's anything even slightly
-        # utf-flavoured in the mix.
-        binmode STDERR, ':encoding(UTF-8)'
-            unless grep /utf/i, PerlIO::get_layers(\*STDERR, output => 1);
-        STDERR->autoflush(1);
-        $self->{has_stderr_utf8} = 1;
-    }
+    # Expand formatting if necessary: it's not immediately clear how to defer
+    # handling of structured data, the ->structured method doesn't have a way
+    # to return the stringified data back to the caller for example
+    # for edge cases like `my $msg = $log->debug(...);` so we're still working
+    # on how best to handle this:
+    # https://metacpan.org/release/Log-Any/source/lib/Log/Any/Proxy.pm#L105
+    # $_ = sprintf $_->@* for grep ref, $data->{message};
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
 
+    # Start with the plain-text details
+    my @details = (
+        Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
+        uc(substr $data->{severity}, 0, 1),
+        "[$from]",
+        $data->{message},
+    );
+
+    # This is good enough if we're in non-colour mode
+    return join ' ', @details unless $opts->{colour};
+
+    my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
+
+    # Colour formatting codes applied at the start and end of each line, in case something else
+    # gets inbetween us and the output
+    local $Term::ANSIColor::EACHLINE = "\n";
+    my ($ts, $level) = splice @details, 0, 2;
+    $from = shift @details;
+    return join ' ',
+        colored(
+            $ts,
+            qw(bright_blue),
+        ),
+        colored(
+            $level,
+            @colours,
+        ),
+        colored(
+            $from,
+            qw(grey10)
+        ),
+        map {
+            colored(
+                $_,
+                @colours,
+            ),
+        } @details;
+}
+
+sub log_entry {
+    my ($self, $data) = @_;
+
+    unless($self->{has_stderr_utf8}) {
+        $self->apply_filehandle_utf8(\*STDERR);
+        $self->{has_stderr_utf8} = 1;
+    }
+
+    $self->{fh}->print(encode_json_text($data) . "\n") if $self->{fh};
+
     my $txt = $self->{in_container} # docker tends to prefer JSON
     ? encode_json_text($data)
-    : do {
-        # Start with the plain-text details
-        my @details = (
-            Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
-            uc(substr $data->{severity}, 0, 1),
-            "[$from]",
-            $data->{message},
-        );
-
-        # Apply colours if necessary...
-        $self->{colour}
-        ? do {
-            my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
-            # Colour formatting codes applied at the start and end of each line, in case something else
-            # gets inbetween us and the output
-            local $Term::ANSIColor::EACHLINE = "\n";
-            my ($ts, $level, $from, @info) = @details;
-            join ' ',
-                colored(
-                    $ts,
-                    qw(bright_blue),
-                ),
-                colored(
-                    $level,
-                    @colours,
-                ),
-                colored(
-                    $from,
-                    qw(grey10)
-                ),
-                map {
-                    colored(
-                        $_,
-                        @colours,
-                    ),
-                } @info
-        }
-        # ... but skip all that extra work if we're in non-colour mode
-        : join ' ', @details;
-    };
+    : $self->format_line($data, { colour => $self->{colour} });
 
     # Regardless of the output, we always use newline separators
     STDERR->print(
@@ -201,3 +240,12 @@ sub log_entry {
 }
 
 1;
+
+=head1 AUTHOR
+
+Deriv Group Services Ltd. C<< DERIV@cpan.org >>
+
+=head1 LICENSE
+
+Copyright Deriv Group Services Ltd 2020-2021. Licensed under the same terms as Perl itself.
+
