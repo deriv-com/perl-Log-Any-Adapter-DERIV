@@ -140,8 +140,9 @@ sub new {
     # There are other ways of running containers, but for now "in docker? generate JSON"
     # is at least a starting point.
     $self->{in_container} = -r '/.dockerenv';
-    unless ($self->{in_container}) {
-        my $json_log_file = $self->{json_log_file} ? $self->{json_log_file} : "$0.json.log";
+    my $json_log_file = $self->{json_log_file};
+    $json_log_file = $0 . '.json.log' if(!$json_log_file && !$self->{in_container});
+    if($json_log_file) {
         $self->{fh} = path($json_log_file)->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{fh}->autoflush(1);
     }
@@ -249,3 +250,4 @@ Deriv Group Services Ltd. C<< DERIV@cpan.org >>
 =head1 LICENSE
 
 Copyright Deriv Group Services Ltd 2020-2021. Licensed under the same terms as Perl itself.
+
