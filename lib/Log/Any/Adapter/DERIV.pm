@@ -137,7 +137,7 @@ $SIG{__DIE__} = sub {
     my @caller = caller(0);
     # if die is handled by Syntax::Keyworkd::Try/try already, ignore it
     unless($caller[10]{"Syntax::Keyword::Try/try"}){
-        $log->error($msg, @caller);
+        $log->error($msg);
     }
 };
 
