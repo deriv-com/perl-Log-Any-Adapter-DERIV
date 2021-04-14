@@ -127,9 +127,18 @@ $SIG{__WARN__} = sub {
     # We don't expect anything called from here to raise further warnings, but
     # let's be safe and try to avoid any risk of recursion
     local $SIG{__WARN__} = undef;
-
     chomp(my $msg = shift);
     $log->warn($msg);
+};
+
+# Upgrade any `die...` lines to send through Log::Any.
+$SIG{__DIE__} = sub {
+    chomp(my $msg = shift);
+    my @caller = caller(0);
+    # if die is handled by Syntax::Keyworkd::Try/try already, ignore it
+    unless($caller[10]{"Syntax::Keyword::Try/try"}){
+        $log->error($msg, @caller);
+    }
 };
 
 sub new {
