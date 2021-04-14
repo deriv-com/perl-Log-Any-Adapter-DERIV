@@ -134,11 +134,12 @@ $SIG{__WARN__} = sub {
 # Upgrade any `die...` lines to send through Log::Any.
 $SIG{__DIE__} = sub {
     chomp(my $msg = shift);
-    my @caller = caller(0);
-    # if die is handled by Syntax::Keyworkd::Try/try already, ignore it
-    unless($caller[10]{"Syntax::Keyword::Try/try"}){
-        $log->error($msg);
+    my $i = 1;
+    # will ignore if die is in eval or try block
+    while ( (my @call_details = (caller($i++))) ){
+        return if $call_details[3] eq '(eval)';
     }
+    $log->error($msg);
 };
 
 sub new {
