@@ -151,7 +151,7 @@ sub new {
     # is at least a starting point.
     $self->{in_container} = -r '/.dockerenv';
     my $json_log_file = $self->{json_log_file};
-    $json_log_file = $0 . '.json.log' if(!$json_log_file && !$self->{in_container});
+    $json_log_file = $0 . '.json.log' if(!$json_log_file && !$self->{in_container} && !$self->{no_json});
     if($json_log_file) {
         $self->{fh} = path($json_log_file)->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{fh}->autoflush(1);
