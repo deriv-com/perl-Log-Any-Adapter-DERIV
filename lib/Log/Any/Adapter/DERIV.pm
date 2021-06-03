@@ -17,6 +17,19 @@ use utf8;
 
 Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
 
+=head1 SYNOPSIS
+
+    use Log::Any;
+
+    # will print text log to STDERR and json log to  program_name.json.log
+    use Log::Any::Adapter ('DERIV'); 
+    
+    # or specify the json log name
+    use Log::Any::Adapter ('DERIV', json_log_file => '/var/log/program.json.log');
+
+    # or sometimes we don't need json log file
+    use Log::Any::Adapter ('DERIVE', no_json => 1);
+
 =head1 DESCRIPTION
 
 Applies some opinionated log handling rules for L<Log::Any>.
@@ -28,7 +41,7 @@ in various ways:
 
 =item * applies UTF-8 encoding to STDERR
 
-=item * writes to a C<.json.log> file named for the current process
+=item * writes to a C<.json.log> file
 
 =item * overrides the default L<Log::Any::Proxy> formatter to provide data as JSON
 
@@ -55,6 +68,21 @@ There is a public repository on Github, anyone is welcome to fork that and imple
 their own version or make feature/bugfix suggestions if they seem generally useful:
 
 L<https://github.com/binary-com/perl-Log-Any-Adapter-DERIV>
+
+=head2 PARAMETERS
+
+=over 4
+
+=item * json_log_file
+
+Specify a file name that the json format log file will be printed into. 
+If not given, then a default file 'program_name.json.log' will be used.
+
+=item * no_json
+
+If it is true, and no json_log_file given, then will not print json logs.
+
+=over
 
 =cut
 
