@@ -22,8 +22,8 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
     use Log::Any;
 
     # will print text log to STDERR and json log to  program_name.json.log
-    use Log::Any::Adapter ('DERIV'); 
-    
+    use Log::Any::Adapter ('DERIV');
+
     # or specify the json log name
     use Log::Any::Adapter ('DERIV', json_log_file => '/var/log/program.json.log');
 
@@ -75,14 +75,14 @@ L<https://github.com/binary-com/perl-Log-Any-Adapter-DERIV>
 
 =item * json_log_file
 
-Specify a file name that the json format log file will be printed into. 
+Specify a file name that the json format log file will be printed into.
 If not given, then a default file 'program_name.json.log' will be used.
 
 =item * no_json
 
 If it is true, and no json_log_file given, then will not print json logs.
 
-=over
+=back
 
 =cut
 
