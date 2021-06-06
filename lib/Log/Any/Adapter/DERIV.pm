@@ -147,15 +147,17 @@ sub new {
     $args{colour} //= -t STDERR;
     my $self = $class->SUPER::new(sub { }, %args);
 
-    # There are other ways of running containers, but for now "in docker? generate JSON"
-    # is at least a starting point.
-    $self->{in_container} = -r '/.dockerenv';
-    my $json_log_file = $self->{json_log_file};
-    $json_log_file = $0 . '.json.log' if(!$json_log_file && !$self->{in_container});
-    if($json_log_file) {
-        $self->{fh} = path($json_log_file)->opena_utf8 or die 'unable to open log file - ' . $!;
-        $self->{fh}->autoflush(1);
+    if($self->{json_log_file}) {
+        $self->{json_fh} = path($self->{json_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
+        $self->{json_fh}->autoflush(1);
     }
+
+    if($self->{text_log_file}) {
+        $self->{text_fh} = path($self->{text_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
+        $self->{text_fh}->autoflush(1);
+    }
+
+    $self->{stderr} = 1 if (!$self->{json_log_file} && !$self->{text_jog_file});
 
     # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
@@ -239,7 +241,10 @@ sub log_entry {
         $self->{has_stderr_utf8} = 1;
     }
 
-    $self->{fh}->print(encode_json_text($data) . "\n") if $self->{fh};
+    $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
+    $self->{text_fh}->print() if $self->{text_fh};
+
+    return unless $self->{stderr};
 
     my $txt = $self->{in_container} # docker tends to prefer JSON
     ? encode_json_text($data)
