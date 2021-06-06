@@ -156,8 +156,9 @@ sub new {
         $self->{text_fh} = path($self->{text_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{text_fh}->autoflush(1);
     }
-
-    $self->{stderr} = 1 if (!$self->{json_log_file} && !$self->{text_jog_file});
+    $self->{in_container} = -r '/.dockerenv';
+    # docker tends to prefer JSON
+    $self->{stderr} //= $self->{in_container} ? 'json' : 'text' if (!$self->{json_log_file} && !$self->{text_jog_file});
 
     # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
@@ -246,7 +247,7 @@ sub log_entry {
 
     return unless $self->{stderr};
 
-    my $txt = $self->{in_container} # docker tends to prefer JSON
+    my $txt = $self->{stderr} eq 'json'
     ? encode_json_text($data)
     : $self->format_line($data, { colour => $self->{colour} });
 
