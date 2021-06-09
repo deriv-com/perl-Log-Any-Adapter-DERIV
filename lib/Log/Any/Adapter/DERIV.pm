@@ -156,7 +156,7 @@ sub new {
         $self->{text_fh} = path($self->{text_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{text_fh}->autoflush(1);
     }
-    $self->{in_container} = -r '/.dockerenv';
+    $self->{in_container} = _in_container();
     # docker tends to prefer JSON
     $self->{stderr} //= $self->{in_container} ? 'json' : 'text' if (!$self->{json_log_file} && !$self->{text_jog_file});
 
@@ -259,6 +259,10 @@ sub log_entry {
 
 sub _stderr_is_tty{
     return -t STDERR;
+}
+
+sub _in_container{
+    return -r '/.dockerenv';
 }
 1;
 
