@@ -46,18 +46,20 @@ subtest 'log to stderr' => sub {
         open STDERR, '>', \$log_message;
         $log->warn("This is a warn log");
     }; 
- 
+
+    my $test_color_log = sub {
+        chomp($log_message);
+        my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
+            colored('[main->subtest]', 'grey10'), colored('This is a warn log', 'bright_yellow');
+        is($log_message, $expected_message, "stderr is tty, no in_container, the log is colored text format");
+    };
     subtest 'stderr is tty, not in container, has stderr'  => sub {
         $stderr_is_tty = 1;
         $in_container = 0; 
         Log::Any::Adapter->import('DERIV', stderr => 1);
         $call_log->();
-        chomp($log_message);
-        diag(explain $log_message);
-        my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
-            colored('[main->subtest]', 'grey10'), colored('This is a warn log', 'bright_yellow');
-        is($log_message, $expected_message, "stderr is tty, no in_container, the log is colored text format");
-    }
+        subtest 'color log' => $test_color_log;
+   }
 
 };
 done_testing();
