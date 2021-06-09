@@ -31,25 +31,33 @@ subtest "json file" => sub {
 
 subtest 'log to stderr' => sub {
     my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
+    my $stderr_is_tty;
     $mocked_deriv->mock('_stderr_is_tty', sub{
-        return 1;
+        return $stderr_is_tty;
     });
+    my $in_container;
     $mocked_deriv->mock('_in_container', sub {
-        return 0;
+        return $in_container;
     });
-    Log::Any::Adapter->import('DERIV', stderr => 1);
-    my $log_message = '';
-    {
+    my $log_message;
+    my $call_log = sub {
         local *STDERR;
+        $log_message = '';
         open STDERR, '>', \$log_message;
         $log->warn("This is a warn log");
-    } 
-    chomp($log_message);
-    diag(explain $log_message);
-    my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
-        colored('[main->subtest]', 'grey10'), colored('This is a warn log', 'bright_yellow');
-    is($log_message, $expected_message);
-    ok(1);
+    }; 
+ 
+    subtest 'stderr is tty, not in container, has stderr'  => sub {
+        $stderr_is_tty = 1;
+        $in_container = 0; 
+        Log::Any::Adapter->import('DERIV', stderr => 1);
+        $call_log->();
+        chomp($log_message);
+        diag(explain $log_message);
+        my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
+            colored('[main->subtest]', 'grey10'), colored('This is a warn log', 'bright_yellow');
+        is($log_message, $expected_message, "stderr is tty, no in_container, the log is colored text format");
+    }
 
 };
 done_testing();
