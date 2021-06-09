@@ -243,7 +243,7 @@ sub log_entry {
     }
 
     $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
-    $self->{text_fh}->print() if $self->{text_fh};
+    $self->{text_fh}->print() if $self->{text_fh}; # TODO print blank ?
 
     return unless $self->{stderr};
 
