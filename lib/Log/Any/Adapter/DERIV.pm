@@ -69,7 +69,7 @@ use Log::Any qw($log);
 # Used for stringifying data more neatly than Data::Dumper might offer
 our $JSON = JSON::MaybeXS->new(
     # Multi-line for terminal output, single line if redirecting somewhere
-    pretty          => (-t STDERR),
+    pretty          => _stderr_is_tty(),
     # Be consistent
     canonical       => 1,
     # Try a bit harder to give useful output
@@ -144,7 +144,7 @@ $SIG{__DIE__} = sub {
 
 sub new {
     my ( $class, %args ) = @_;
-    $args{colour} //= -t STDERR;
+    $args{colour} //= _stderr_is_tty();
     my $self = $class->SUPER::new(sub { }, %args);
 
     if($self->{json_log_file}) {
@@ -257,6 +257,9 @@ sub log_entry {
     );
 }
 
+sub _stderr_is_tty{
+    return -t STDERR;
+}
 1;
 
 =head1 AUTHOR
