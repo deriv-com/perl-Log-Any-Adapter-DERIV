@@ -13,11 +13,8 @@ use Sys::Hostname;
 use Test::MockModule;
 use Term::ANSIColor qw(colored);
 set_fixed_time(1623247131);
-subtest "json file" => sub {
-    ok(1);
-    my $json_log_file = Path::Tiny->tempfile();
-    Log::Any::Adapter->import('DERIV', json_log_file => "$json_log_file");
-    $log->warn('this is a warn log');
+my $json_log_file = Path::Tiny->tempfile();
+sub test_json {
     my $log_message = $json_log_file->slurp;
     chomp($log_message);
     lives_ok {$log_message = decode_json_text($log_message)} 'log message is a valid json';
@@ -26,7 +23,12 @@ subtest "json file" => sub {
     is($log_message->{pid}, $$, "pid ok");
     is($log_message->{message}, 'this is a warn log', "message ok");
     is($log_message->{severity}, 'warning', "severity ok");
-    done_testing();
+}
+subtest "json file" => sub {
+    Log::Any::Adapter->import('DERIV', json_log_file => "$json_log_file");
+    $log->warn('this is a warn log');
+    subtest 'test json log' => \&test_json;
+   done_testing();
 };
 
 subtest 'log to stderr' => sub {
@@ -61,11 +63,26 @@ subtest 'log to stderr' => sub {
         subtest 'color log' => $test_color_log;
    };
    subtest 'stderr is tty, not in container, has no stderr, default should be stderr' => sub {
-       $stderr_is_tty = 1;
-       $in_container = 0;
-       Log::Any::Adapter->import('DERIV');
-       $call_log->();
-       subtest 'color log' => $test_color_log;
+        $stderr_is_tty = 1;
+        $in_container = 0;
+        Log::Any::Adapter->import('DERIV');
+        $call_log->();
+        subtest 'color log' => $test_color_log;
+   };
+   subtest 'stderr is tty, not in container, has stderr with value text' => sub {
+        $stderr_is_tty = 1;
+        $in_container = 0;
+        Log::Any::Adapter->import('DERIV', stderr => 'text');
+        $call_log->();
+        subtest 'color log' => $test_color_log;
+   };
+   subtest 'stderr is tty, not in container, has stderr with value json' => sub {
+        $stderr_is_tty = 1;
+        $in_container = 0;
+        Log::Any::Adapter->import('DERIV', stderr => 'json');
+        $call_log->();
+        ok(1);
+      #  subtest 'color log' => $test_color_log;
    };
 
 };
