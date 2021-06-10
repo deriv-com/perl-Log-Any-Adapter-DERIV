@@ -59,7 +59,14 @@ subtest 'log to stderr' => sub {
         Log::Any::Adapter->import('DERIV', stderr => 1);
         $call_log->();
         subtest 'color log' => $test_color_log;
-   }
+   };
+   subtest 'stderr is tty, not in container, has no stderr, default should be stderr' => sub {
+       $stderr_is_tty = 1;
+       $in_container = 0;
+       Log::Any::Adapter->import('DERIV');
+       $call_log->();
+       subtest 'color log' => $test_color_log;
+   };
 
 };
 done_testing();
