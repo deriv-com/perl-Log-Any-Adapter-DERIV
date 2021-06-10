@@ -151,18 +151,14 @@ sub new {
         $self->{json_fh} = path($self->{json_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{json_fh}->autoflush(1);
     }
-
-    if($self->{text_log_file}) {
-        $self->{text_fh} = path($self->{text_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
-        $self->{text_fh}->autoflush(1);
-    }
-    
     # if there is stderr, then print log to stderr also
     # if stderr is josn or text, then use that format
     # else, if it is in_container, then json, else text
-    $self->{in_container} = _in_container();
+    if(!$self->{json_log_file} && !$self->{stderr}){
+        $self->{stderr} = 1;
+    }
     # docker tends to prefer JSON
-    $self->{stderr} //= $self->{in_container} ? 'json' : 'text' if (!$self->{json_log_file} && !$self->{text_jog_file});
+    $self->{stderr} = _in_container() ? 'json' : 'text' if ($self->{stderr} && $self->{stderr} ne 'json' && $self->{stderr} ne 'text');
 
     # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
@@ -247,7 +243,6 @@ sub log_entry {
     }
 
     $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
-    $self->{text_fh}->print() if $self->{text_fh}; # TODO print blank ?
 
     return unless $self->{stderr};
 
