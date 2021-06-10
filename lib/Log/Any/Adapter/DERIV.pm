@@ -146,7 +146,7 @@ sub new {
     my ( $class, %args ) = @_;
     $args{colour} //= _stderr_is_tty();
     my $self = $class->SUPER::new(sub { }, %args);
-
+    # if there is json_log_file, then print josn to that file
     if($self->{json_log_file}) {
         $self->{json_fh} = path($self->{json_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{json_fh}->autoflush(1);
@@ -156,6 +156,10 @@ sub new {
         $self->{text_fh} = path($self->{text_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{text_fh}->autoflush(1);
     }
+    
+    # if there is stderr, then print log to stderr also
+    # if stderr is josn or text, then use that format
+    # else, if it is in_container, then json, else text
     $self->{in_container} = _in_container();
     # docker tends to prefer JSON
     $self->{stderr} //= $self->{in_container} ? 'json' : 'text' if (!$self->{json_log_file} && !$self->{text_jog_file});
