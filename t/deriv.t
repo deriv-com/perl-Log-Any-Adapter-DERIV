@@ -13,21 +13,22 @@ use Sys::Hostname;
 use Test::MockModule;
 use Term::ANSIColor qw(colored);
 set_fixed_time(1623247131);
-my $json_log_file = Path::Tiny->tempfile();
 sub test_json {
-    my $log_message = $json_log_file->slurp;
+    my $log_message = shift;
     chomp($log_message);
     lives_ok {$log_message = decode_json_text($log_message)} 'log message is a valid json';
     is_deeply([sort keys %$log_message], [sort qw(pid stack severity host epoch message)]);
     is($log_message->{host}, hostname(), "host name ok");
     is($log_message->{pid}, $$, "pid ok");
-    is($log_message->{message}, 'this is a warn log', "message ok");
+    is($log_message->{message}, 'This is a warn log', "message ok");
     is($log_message->{severity}, 'warning', "severity ok");
 }
 subtest "json file" => sub {
+    my $json_log_file = Path::Tiny->tempfile();
     Log::Any::Adapter->import('DERIV', json_log_file => "$json_log_file");
-    $log->warn('this is a warn log');
-    subtest 'test json log' => \&test_json;
+    $log->warn('This is a warn log');
+    my $log_message = $json_log_file->slurp;
+    test_json($log_message);
    done_testing();
 };
 
@@ -81,8 +82,8 @@ subtest 'log to stderr' => sub {
         $in_container = 0;
         Log::Any::Adapter->import('DERIV', stderr => 'json');
         $call_log->();
-        ok(1);
       #  subtest 'color log' => $test_color_log;
+        test_json($log_message);
    };
 
 };
