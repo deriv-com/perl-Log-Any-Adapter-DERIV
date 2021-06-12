@@ -35,6 +35,20 @@ sub test_json {
     is($log_message->{message}, 'This is a warn log', "message ok");
     is($log_message->{severity}, 'warning', "severity ok");
 }
+
+sub test_color_text{
+    my $log_message = shift;
+        chomp($log_message);
+        my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
+            colored('[main->do_test]', 'grey10'), colored('This is a warn log', 'bright_yellow');
+        is($log_message, $expected_message, "colored text ok");
+}
+sub test_text{
+    my $log_message = shift;
+    chomp($log_message);
+        my $expected_message = join " ", '2021-06-09T13:58:51', 'W', '[main->do_test]', 'This is a warn log';
+        is($log_message, $expected_message, "text message ok");
+}
 my $stderr_log_message;
 my $file_log_message;
 my $json_log_file = Path::Tiny->tempfile();
@@ -131,8 +145,20 @@ sub do_test{
         $stderr_is_tty = $args{stderr_is_tty};
         $in_container = $args{in_container};
         call_log($args{import_args});
-        ok(1);
+        if($args{test_json_file}){
+            ok($file_log_message, 'json file has logs');
+            test_json($file_log_message);
+        };
+        return unless $args{test_stderr};
+        ok($stderr_log_message, "STDERR has logs");
+        if($args{test_stderr} eq 'json'){
+            test_json($stderr_log_message);
+        }elsif($args{test_stderr} eq 'color_text'){
+            test_color_text($stderr_log_message);
+        }else{
+            test_text($stderr_log_message);
+        }
     }
 }
-do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 'text'}, log_file => 'stderr');
+do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 'text'}, test_stderr => 'color_text');
 done_testing();
