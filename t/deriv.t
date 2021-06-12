@@ -64,15 +64,6 @@ sub call_log{
         $log->warn("This is a warn log");
         $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';
 }
-subtest "json file" => sub {
-    my $json_log_file = Path::Tiny->tempfile();
-    Log::Any::Adapter->import('DERIV', json_log_file => "$json_log_file");
-    $log->warn('This is a warn log');
-    my $log_message = $json_log_file->slurp;
-    test_json($log_message);
-   done_testing();
-};
-
 sub do_test{
     my %args = @_;
     subtest encode_json_text(\%args) => sub{
@@ -95,6 +86,7 @@ sub do_test{
     }
 }
 
+do_test(stderr_is_tty => 0, in_container => 0, import_args => {json_log_file => "$json_log_file"}, test_json_file => 1);
 do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 1}, test_stderr => 'color_text');
 do_test(stderr_is_tty => 1, in_container => 0, import_args => {}, test_stderr => 'color_text');
 do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 'text'}, test_stderr => 'color_text');
