@@ -222,4 +222,11 @@ do_test(
     import_args   => { stderr => 'json' },
     test_stderr   => 'json'
 );
+do_test(
+    stderr_is_tty => 1,
+    in_container  => 1,
+    import_args   => { json_log_file => "$json_log_file",stderr => 'json' },
+    test_stderr   => 'json',
+    test_json_file => 1,
+);
 done_testing();
