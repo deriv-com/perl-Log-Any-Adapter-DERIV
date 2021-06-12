@@ -151,6 +151,30 @@ do_test(
     test_stderr   => 'json'
 );
 do_test(
+    stderr_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stderr => 1 },
+    test_stderr   => 'json'
+);
+do_test(
+    stderr_is_tty => 0,
+    in_container  => 1,
+    import_args   => {},
+    test_stderr   => 'json'
+);
+do_test(
+    stderr_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stderr => 'text' },
+    test_stderr   => 'text'
+);
+do_test(
+    stderr_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stderr => 'json' },
+    test_stderr   => 'json'
+);
+do_test(
     stderr_is_tty => 1,
     in_container  => 0,
     import_args   => { stderr => 1 },
