@@ -13,6 +13,18 @@ use Sys::Hostname;
 use Test::MockModule;
 use Term::ANSIColor qw(colored);
 set_fixed_time(1623247131);
+
+    my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
+    my $stderr_is_tty;
+    $mocked_deriv->mock('_stderr_is_tty', sub{
+        return $stderr_is_tty;
+    });
+    my $in_container;
+    $mocked_deriv->mock('_in_container', sub {
+        return $in_container;
+    });
+ 
+
 sub test_json {
     my $log_message = shift;
     chomp($log_message);
@@ -22,6 +34,21 @@ sub test_json {
     is($log_message->{pid}, $$, "pid ok");
     is($log_message->{message}, 'This is a warn log', "message ok");
     is($log_message->{severity}, 'warning', "severity ok");
+}
+my $stderr_log_message;
+my $file_log_message;
+my $json_log_file = Path::Tiny->tempfile();
+sub call_log{
+    my $import_args = shift;
+    
+        local *STDERR;
+        $stderr_log_message = '';
+        $file_log_message = '';
+        $json_log_file->remove;
+        open STDERR, '>', \$stderr_log_message;
+        Log::Any::Adapter->import('DERIV', $import_args->%*);
+        $log->warn("This is a warn log");
+        $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';
 }
 subtest "json file" => sub {
     my $json_log_file = Path::Tiny->tempfile();
@@ -33,16 +60,7 @@ subtest "json file" => sub {
 };
 
 subtest 'log to stderr' => sub {
-    my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
-    my $stderr_is_tty;
-    $mocked_deriv->mock('_stderr_is_tty', sub{
-        return $stderr_is_tty;
-    });
-    my $in_container;
-    $mocked_deriv->mock('_in_container', sub {
-        return $in_container;
-    });
-    my $log_message;
+   my $log_message;
     my $call_log = sub {
         local *STDERR;
         $log_message = '';
@@ -106,4 +124,15 @@ subtest 'log to stderr' => sub {
         subtest 'color log' => $test_color_log;
     };
 };
+
+sub do_test{
+    my %args = @_;
+    subtest encode_json_text(\%args) => sub{
+        $stderr_is_tty = $args{stderr_is_tty};
+        $in_container = $args{in_container};
+        call_log($args{import_args});
+        ok(1);
+    }
+}
+do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 'text'}, log_file => 'stderr');
 done_testing();
