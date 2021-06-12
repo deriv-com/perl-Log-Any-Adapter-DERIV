@@ -237,14 +237,14 @@ sub format_line {
 sub log_entry {
     my ($self, $data) = @_;
 
+    $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
+
+    return unless $self->{stderr};
+
     unless($self->{has_stderr_utf8}) {
         $self->apply_filehandle_utf8(\*STDERR);
         $self->{has_stderr_utf8} = 1;
     }
-
-    $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
-
-    return unless $self->{stderr};
 
     my $txt = $self->{stderr} eq 'json'
     ? encode_json_text($data)
