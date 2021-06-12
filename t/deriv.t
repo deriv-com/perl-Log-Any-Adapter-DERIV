@@ -73,44 +73,6 @@ subtest "json file" => sub {
    done_testing();
 };
 
-subtest 'log to stderr' => sub {
-   my $log_message;
-    my $call_log = sub {
-        local *STDERR;
-        $log_message = '';
-        open STDERR, '>', \$log_message;
-        $log->warn("This is a warn log");
-    }; 
-
-    my $test_color_log = sub {
-        chomp($log_message);
-        my $expected_message = join " ", colored('2021-06-09T13:58:51', 'bright_blue'), colored('W', 'bright_yellow'),
-            colored('[main->subtest]', 'grey10'), colored('This is a warn log', 'bright_yellow');
-        is($log_message, $expected_message, "stderr is tty, no in_container, the log is colored text format");
-    };
-    subtest 'stderr is tty, not in container, has stderr'  => sub {
-        $stderr_is_tty = 1;
-        $in_container = 0; 
-        Log::Any::Adapter->import('DERIV', stderr => 1);
-        $call_log->();
-        subtest 'color log' => $test_color_log;
-   };
-   subtest 'stderr is tty, not in container, has no stderr, default should be stderr' => sub {
-        $stderr_is_tty = 1;
-        $in_container = 0;
-        Log::Any::Adapter->import('DERIV');
-        $call_log->();
-        subtest 'color log' => $test_color_log;
-   };
-   subtest 'stderr is tty, not in container, has stderr with value text' => sub {
-        $stderr_is_tty = 1;
-        $in_container = 0;
-        Log::Any::Adapter->import('DERIV', stderr => 'text');
-        $call_log->();
-        subtest 'color log' => $test_color_log;
-   };
-};
-
 sub do_test{
     my %args = @_;
     subtest encode_json_text(\%args) => sub{
@@ -133,6 +95,9 @@ sub do_test{
     }
 }
 
+do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 1}, test_stderr => 'color_text');
+do_test(stderr_is_tty => 1, in_container => 0, import_args => {}, test_stderr => 'color_text');
+do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 'text'}, test_stderr => 'color_text');
 do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 'json'}, test_stderr => 'json');
 do_test(stderr_is_tty => 1, in_container => 1, import_args => {}, test_stderr => 'json');
 do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 1}, test_stderr => 'json');
