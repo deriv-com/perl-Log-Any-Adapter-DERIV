@@ -109,13 +109,6 @@ subtest 'log to stderr' => sub {
         $call_log->();
         subtest 'color log' => $test_color_log;
    };
-   subtest 'stderr is tty, not in container, has stderr with value json' => sub {
-        $stderr_is_tty = 1;
-        $in_container = 0;
-        Log::Any::Adapter->import('DERIV', stderr => 'json');
-        $call_log->();
-        test_json($log_message);
-    };
 };
 
 sub do_test{
@@ -140,6 +133,7 @@ sub do_test{
     }
 }
 
+do_test(stderr_is_tty => 1, in_container => 0, import_args => {stderr => 'json'}, test_stderr => 'json');
 do_test(stderr_is_tty => 1, in_container => 1, import_args => {}, test_stderr => 'json');
 do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 1}, test_stderr => 'json');
 do_test(stderr_is_tty => 1, in_container => 1, import_args => {stderr => 'text'}, test_stderr => 'color_text');
