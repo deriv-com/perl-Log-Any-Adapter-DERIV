@@ -109,6 +109,24 @@ do_test(
     test_json_file => 1
 );
 do_test(
+    stderr_is_tty  => 0,
+    in_container   => 1,
+    import_args    => { json_log_file => "$json_log_file" },
+    test_json_file => 1
+);
+do_test(
+    stderr_is_tty  => 1,
+    in_container   => 0,
+    import_args    => { json_log_file => "$json_log_file" },
+    test_json_file => 1
+);
+do_test(
+    stderr_is_tty  => 1,
+    in_container   => 1,
+    import_args    => { json_log_file => "$json_log_file" },
+    test_json_file => 1
+);
+do_test(
     stderr_is_tty => 1,
     in_container  => 0,
     import_args   => { stderr => 1 },
