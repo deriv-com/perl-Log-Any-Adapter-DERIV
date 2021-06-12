@@ -216,4 +216,10 @@ do_test(
     import_args   => { stderr => 'text' },
     test_stderr   => 'color_text'
 );
+do_test(
+    stderr_is_tty => 1,
+    in_container  => 1,
+    import_args   => { stderr => 'json' },
+    test_stderr   => 'json'
+);
 done_testing();
