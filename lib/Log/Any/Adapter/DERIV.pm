@@ -17,6 +17,19 @@ use utf8;
 
 Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
 
+=head1 SYNOPSIS
+
+    use Log::Any;
+    # will print text log to STDERR, maybe json format (if in docker container) or colored text format (if STDERR is a tty)
+    # or text format (if STDERR is redirected)
+    use Log::Any::Adapter ('DERIV');
+    # or we can specify STDERR directly
+    use Log::any::Adapter ('DERIV', stderr => 1)
+    # or we can specify STDERR's format
+    use Log::any::Adapter ('DERIV', stderr => 'json')
+    # or specify the json log name
+    use Log::Any::Adapter ('DERIV', json_log_file => '/var/log/program.json.log');
+
 =head1 DESCRIPTION
 
 Applies some opinionated log handling rules for L<Log::Any>.
@@ -28,7 +41,7 @@ in various ways:
 
 =item * applies UTF-8 encoding to STDERR
 
-=item * writes to a C<.json.log> file named for the current process
+=item * writes to a C<.json.log> file.
 
 =item * overrides the default L<Log::Any::Proxy> formatter to provide data as JSON
 
@@ -55,6 +68,28 @@ There is a public repository on Github, anyone is welcome to fork that and imple
 their own version or make feature/bugfix suggestions if they seem generally useful:
 
 L<https://github.com/binary-com/perl-Log-Any-Adapter-DERIV>
+
+=head2 PARAMETERS
+
+=over 4
+
+=item * json_log_file
+
+Specify a file name that the json format log file will be printed into.
+If not given, then a default file 'program_name.json.log' will be used.
+
+=item * STDERR
+
+If it is true, then print logs to STDERR
+
+If the value is json or text, then print logs with that format
+
+If the value is just a true value other than `json` or `text`, then if it is running in a container, 
+then the logs is `json` format. Else if STDERR is a tty will be `colored text` format. Else if will be a non-color text format.
+
+=back
+
+If no any paramter, then default `stderr => 1`;
 
 =cut
 
