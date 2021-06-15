@@ -1,0 +1,16 @@
+use strict;
+use warnings;
+use Test::More;
+use Log::Any qw($log);
+use Log::Any::Adapter qw();
+use Path::Tiny;
+use Future;
+my $json_log_file = Path::Tiny->tempfile;
+Log::Any::Adapter->import('DERIV', log_level => 'debug', json_log_file => $json_log_file);
+my $f = Future->new;
+my $f2 = $f->then_done->then_done->then_done->then_done->then(sub{$log->debug("this is a debug message")});
+$f->done;
+my $message = $json_log_file->slurp;
+#diag(explain($message));
+ok(1);
+done_testing();
