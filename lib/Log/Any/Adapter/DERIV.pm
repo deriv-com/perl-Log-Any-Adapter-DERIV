@@ -251,6 +251,15 @@ sub log_entry {
     );
 }
 
+
+=head2 collapse_future_stack
+
+The future frames are too much and too tedious. This method will keep only one frame if there are many continuously future frames.
+Parameter: log data
+Return: log data
+
+=cut
+
 sub collapse_future_stack{
     my ($self, $data) = @_;
     my $stack = $data->{stack};
