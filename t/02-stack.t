@@ -42,28 +42,29 @@ subtest 'collapse_future_stack' => sub {
 };
 
 subtest 'test collapse from message' => sub {
-  my $json_log_file = Path::Tiny->tempfile;
-  Log::Any::Adapter->import('DERIV', log_level => 'debug', json_log_file => $json_log_file);
-  my $f = Future->new;
-  my $f2 = $f->then_done->then_done->then_done->then_done->then(sub{$log->debug("this is a debug message")});
-  $f->done;
-  my $message = $json_log_file->slurp;
+  my $get_message = sub {
+    my $f = shift;
+    my $json_log_file = Path::Tiny->tempfile;
+    Log::Any::Adapter->import('DERIV', log_level => 'debug', json_log_file => $json_log_file);
+    $f->done;
+   my $message = $json_log_file->slurp;
   chomp $message;
   $message = decode_json_text($message);
-  my $expected_stack = decode_json_text('[{"line":625,"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm","method":"_mark_ready"},{"method":"done","package":"main","file":"t/02-stack.t","line":49},{"package":"Test::Builder","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","line":334,"method":"__ANON__"},{"method":"(eval)","line":334,"package":"Test::Builder","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm"},{"line":809,"package":"Test::More","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","method":"subtest"},{"line":68,"package":"main","file":"t/02-stack.t","method":"subtest"}]');
+  return $message;   
+  };
+
+ my $f = Future->new;
+  my $f2 = $f->then_done->then_done->then_done->then_done->then(sub{$log->debug("this is a debug message")});
+  my $message = $get_message->($f);
+ my $expected_stack = decode_json_text('[{"method":"_mark_ready","line":625,"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm"},{"method":"done","file":"t/02-stack.t","package":"main","line":49},{"line":58,"package":"main","file":"t/02-stack.t","method":"__ANON__"},{"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","package":"Test::Builder","line":334,"method":"__ANON__"},{"method":"(eval)","package":"Test::Builder","line":334,"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm"},{"method":"subtest","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","package":"Test::More","line":809},{"file":"t/02-stack.t","package":"main","line":69,"method":"subtest"}]');
   is_deeply($message->{stack}, $expected_stack, "the stack value is correct");
   
-  $json_log_file = Path::Tiny->tempfile;
-  Log::Any::Adapter->import('DERIV', log_level => 'debug', json_log_file => $json_log_file);
   my $f1 = Future->new;
   my $f3 = Future->new;
   $f2 = $f1->then_done->then_done->then(sub{$f3->done});
   my $f4 = $f3->then_done->then_done->then(sub{$log->debug("this is a debug message"); Future->done});
-  $f1->done;
-  $message = $json_log_file->slurp;
-  chomp $message;
-  $message = decode_json_text($message);
-  my $expected_stack = decode_json_text('[{"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm","line":625,"method":"_mark_ready"},{"method":"done","line":60,"file":"t/02-stack.t","package":"main"},{"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm","line":625,"method":"_mark_ready"},{"method":"done","line":62,"package":"main","file":"t/02-stack.t"},{"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","package":"Test::Builder","line":334,"method":"__ANON__"},{"package":"Test::Builder","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","line":334,"method":"(eval)"},{"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","package":"Test::More","method":"subtest","line":809},{"file":"t/02-stack.t","package":"main","line":68,"method":"subtest"}]');
+  $message = $get_message->($f1);
+  my $expected_stack = decode_json_text('[{"package":"Future","line":625,"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm","method":"_mark_ready"},{"method":"done","file":"t/02-stack.t","line":64,"package":"main"},{"method":"_mark_ready","line":625,"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm"},{"method":"done","package":"main","line":49,"file":"t/02-stack.t"},{"method":"__ANON__","line":66,"package":"main","file":"t/02-stack.t"},{"method":"__ANON__","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","line":334,"package":"Test::Builder"},{"line":334,"package":"Test::Builder","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","method":"(eval)"},{"method":"subtest","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","package":"Test::More","line":809},{"file":"t/02-stack.t","line":69,"package":"main","method":"subtest"}]');
   is_deeply($message->{stack}, $expected_stack, "more example");
 };
 done_testing();
