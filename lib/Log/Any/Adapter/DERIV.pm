@@ -233,7 +233,6 @@ sub format_line {
 
 sub log_entry {
     my ($self, $data) = @_;
-    print STDERR "lllllllllllllllllllllllllllllll";
     $data = $self->collapse_future_stack($data);
     unless($self->{has_stderr_utf8}) {
         $self->apply_filehandle_utf8(\*STDERR);
@@ -258,20 +257,15 @@ sub collapse_future_stack{
     my @new_stack;
     my $previous_future;
     for my  $frame ($stack->@*){
-        use Data::Dumper;
-        print STDERR "frame is " . Dumper($frame);
         if($frame->{package} eq 'Future'){
-            print STDERR "is future\n";
             $previous_future = $frame;
         }
         elsif($previous_future){
-            print STDERR "is not future, previous is future\n";
             push @new_stack, $previous_future;
             $previous_future = undef;
             push @new_stack, $frame;
         }
         else{
-            print STDERR "is not future, previous not future\n";
             push @new_stack, $frame;
         }
     }
