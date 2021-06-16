@@ -69,25 +69,38 @@ subtest 'test collapse from message' => sub {
         return $message;
     };
 
-    my $f1  = Future->new;
+    my $f1 = Future->new;
     my $f2 = $f1->then_done->then_done->then_done->then_done->then(
         sub { $log->debug("this is a debug message") } );
     my $message        = $get_message->($f1);
-    my $expected_stack = decode_json_text(
-'[{"method":"_mark_ready","line":625,"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm"},{"method":"done","file":"t/02-stack.t","package":"main","line":65},{"line":75,"package":"main","file":"t/02-stack.t","method":"__ANON__"},{"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","package":"Test::Builder","line":334,"method":"__ANON__"},{"method":"(eval)","package":"Test::Builder","line":334,"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm"},{"method":"subtest","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","package":"Test::More","line":809},{"file":"t/02-stack.t","package":"main","line":92,"method":"subtest"}]'
-    );
-    is_deeply( $message->{stack}, $expected_stack,
-        "the stack value is correct" );
+    my $expected_stack = [
+        map { ; { package => $_ } } (
+            "Future",        "main",
+            "main",          "Test::Builder",
+            "Test::Builder", "Test::More",
+            "main"
+        )
+    ];
+    my $stack =
+      [ map { ; { package => $_->{package} } } @{ $message->{stack} } ];
+    is_deeply( $stack, $expected_stack, "the stack value is correct" );
 
     $f1 = Future->new;
     $f2 = Future->new;
     my $f3 = $f1->then_done->then_done->then( sub { $f2->done } );
     my $f4 = $f2->then_done->then_done->then(
         sub { $log->debug("this is a debug message"); Future->done } );
-    $message = $get_message->($f1);
-    my $expected_stack = decode_json_text(
-'[{"package":"Future","line":625,"file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm","method":"_mark_ready"},{"method":"done","file":"t/02-stack.t","line":84,"package":"main"},{"method":"_mark_ready","line":625,"package":"Future","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm"},{"method":"done","package":"main","line":65,"file":"t/02-stack.t"},{"method":"__ANON__","line":87,"package":"main","file":"t/02-stack.t"},{"method":"__ANON__","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","line":334,"package":"Test::Builder"},{"line":334,"package":"Test::Builder","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/Builder.pm","method":"(eval)"},{"method":"subtest","file":"/home/git/regentmarkets/cpan/local/lib/perl5/Test/More.pm","package":"Test::More","line":809},{"file":"t/02-stack.t","line":92,"package":"main","method":"subtest"}]'
-    );
-    is_deeply( $message->{stack}, $expected_stack, "more example" );
+    $message        = $get_message->($f1);
+    $expected_stack = [
+        map { ; { package => $_ } } (
+            "Future",        "main",
+            "Future",        "main",
+            "main",          "Test::Builder",
+            "Test::Builder", "Test::More",
+            "main"
+        )
+    ];
+    $stack = [ map { ; { package => $_->{package} } } @{ $message->{stack} } ];
+    is_deeply( $stack, $expected_stack, "more example" );
 };
 done_testing();
