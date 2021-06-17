@@ -181,7 +181,7 @@ sub new {
     my ( $class, %args ) = @_;
     $args{colour} //= _stderr_is_tty();
     my $self = $class->SUPER::new(sub { }, %args);
-    # if there is json_log_file, then print josn to that file
+    # if there is json_log_file, then print json to that file
     if($self->{json_log_file}) {
         $self->{json_fh} = path($self->{json_log_file})->opena_utf8 or die 'unable to open log file - ' . $!;
         $self->{json_fh}->autoflush(1);
