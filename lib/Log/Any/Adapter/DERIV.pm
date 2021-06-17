@@ -89,7 +89,7 @@ then the logs is `json` format. Else if STDERR is a tty will be `colored text` f
 
 =back
 
-If no any paramter, then default `stderr => 1`;
+If no any parameter, then default `stderr => 1`;
 
 =cut
 
@@ -307,4 +307,3 @@ Deriv Group Services Ltd. C<< DERIV@cpan.org >>
 =head1 LICENSE
 
 Copyright Deriv Group Services Ltd 2020-2021. Licensed under the same terms as Perl itself.
-
