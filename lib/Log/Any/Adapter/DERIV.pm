@@ -187,7 +187,7 @@ sub new {
         $self->{json_fh}->autoflush(1);
     }
     # if there is stderr, then print log to stderr also
-    # if stderr is josn or text, then use that format
+    # if stderr is json or text, then use that format
     # else, if it is in_container, then json, else text
     if(!$self->{json_log_file} && !$self->{stderr}){
         $self->{stderr} = 1;
