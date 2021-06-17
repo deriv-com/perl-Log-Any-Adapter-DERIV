@@ -24,7 +24,7 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
     # or text format (if STDERR is redirected)
     use Log::Any::Adapter ('DERIV');
     # or we can specify STDERR directly
-    use Log::any::Adapter ('DERIV', stderr => 1)
+    use Log::Any::Adapter ('DERIV', stderr => 1)
     # or we can specify STDERR's format
     use Log::any::Adapter ('DERIV', stderr => 'json')
     # or specify the json log name
