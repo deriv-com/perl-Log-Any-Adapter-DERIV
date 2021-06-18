@@ -20,14 +20,16 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
 =head1 SYNOPSIS
 
     use Log::Any;
-    # will print text log to STDERR, maybe json format (if in docker container) or colored text format (if STDERR is a tty)
-    # or text format (if STDERR is redirected)
+    # print text log to STDERR, json format when inside docker container , colored text format when STDERR is a tty, non-colored text format when STDERR is redirected.
     use Log::Any::Adapter ('DERIV');
-    # or we can specify STDERR directly
-    use Log::Any::Adapter ('DERIV', stderr => 1)
-    # or we can specify STDERR's format
-    use Log::Any::Adapter ('DERIV', stderr => 'json')
-    # or specify the json log name
+    
+    #specify STDERR directly
+    use Log::any::Adapter ('DERIV', stderr => 1)
+    
+    #specify STDERR's format
+    use Log::any::Adapter ('DERIV', stderr => 'json')
+
+    #specify the json log name
     use Log::Any::Adapter ('DERIV', json_log_file => '/var/log/program.json.log');
 
 =head1 DESCRIPTION
