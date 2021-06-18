@@ -24,10 +24,10 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
     use Log::Any::Adapter ('DERIV');
 
     #specify STDERR directly
-    use Log::any::Adapter ('DERIV', stderr => 1)
+    use Log::Any::Adapter ('DERIV', stderr => 1)
 
     #specify STDERR's format
-    use Log::any::Adapter ('DERIV', stderr => 'json')
+    use Log::Any::Adapter ('DERIV', stderr => 'json')
 
     #specify the json log name
     use Log::Any::Adapter ('DERIV', json_log_file => '/var/log/program.json.log');
