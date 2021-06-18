@@ -22,7 +22,7 @@ Log::Any::Adapter::DERIV - standardised logging to STDERR and JSON file
     use Log::Any;
     # print text log to STDERR, json format when inside docker container , colored text format when STDERR is a tty, non-colored text format when STDERR is redirected.
     use Log::Any::Adapter ('DERIV');
-    
+
     #specify STDERR directly
     use Log::any::Adapter ('DERIV', stderr => 1)
     
