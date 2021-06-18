@@ -84,7 +84,7 @@ If it is true, then print logs to STDERR
 
 If the value is json or text, then print logs with that format
 
-If the value is just a true value other than `json` or `text`, then if it is running in a container, 
+If the value is just a true value other than `json` or `text`, then if it is running in a container,
 then the logs is `json` format. Else if STDERR is a tty will be `colored text` format. Else if will be a non-color text format.
 
 =back
