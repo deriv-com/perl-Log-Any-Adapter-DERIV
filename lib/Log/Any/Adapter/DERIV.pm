@@ -264,21 +264,18 @@ sub collapse_future_stack{
     my ($self, $data) = @_;
     my $stack = $data->{stack};
     my @new_stack;
-    my $previous_future;
+    my $previous_is_future;
     for my  $frame ($stack->@*){
         if($frame->{package} eq 'Future'){
-            $previous_future = $frame;
-        }
-        elsif($previous_future){
-            push @new_stack, $previous_future;
-            $previous_future = undef;
+            next if($previous_is_future);
             push @new_stack, $frame;
+            $previous_is_future = 1;
         }
         else{
             push @new_stack, $frame;
+            $previous_is_future = 0;
         }
     }
-    push @new_stack, $previous_future if $previous_future;
     $data->{stack} = \@new_stack;
     return $data;
 }
