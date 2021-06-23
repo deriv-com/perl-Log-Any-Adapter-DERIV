@@ -30,9 +30,10 @@ subtest 'collapse_future_stack' => sub {
             'line'    => 13
         }
     ];
-    my $arg_stack      = clone($sample_stack);
+    my $arg_stack      = [@$sample_stack[0,1,2,0,1,2]];
+    #diag("arg stack "); diag  explain($arg_stack);
     # remove the outest stack frame
-    my $expected_stack = [$sample_stack->[0], $sample_stack->[2]];
+    my $expected_stack = [@$sample_stack[0,2,0,2]];
     is_deeply(
         Log::Any::Adapter::DERIV->collapse_future_stack(
             { stack => $arg_stack }
