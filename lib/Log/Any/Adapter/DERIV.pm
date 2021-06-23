@@ -233,7 +233,7 @@ sub format_line {
 
 sub log_entry {
     my ($self, $data) = @_;
-
+    $data = $self->process_data($data);
     unless($self->{has_stderr_utf8}) {
         $self->apply_filehandle_utf8(\*STDERR);
         $self->{has_stderr_utf8} = 1;
@@ -249,6 +249,22 @@ sub log_entry {
     STDERR->print(
         "$txt\n"
     );
+}
+
+sub process_data{
+    my ($self, $data) = @_;
+
+    # TODO clone data
+    use Log::Any::Adapter::Util qw(numeric_level);
+    use Data::Dumper;
+    print Dumper($self);
+    print Dumper($data);
+    return $data if(numeric_level($data->{severity}) <= numeric_level('warn'));
+    # now severity > warn
+    return $data if $self->{log_level} >= numeric_level('debug');
+    delete $data->{stack};
+    return $data;
+
 }
 
 1;
