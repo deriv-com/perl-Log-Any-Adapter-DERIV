@@ -16,7 +16,6 @@ sub test_log{
     $log->$severity('test info');
     my $log_message = $json_log_file->slurp;
     chomp($log_message);
-    #diag(explain($log_message));
     $log_message = decode_json_text($log_message);
     my $exist_stack = exists($log_message->{stack});
     if($has_stack){
@@ -47,6 +46,5 @@ for my $log_level (@levels){
        test_log($log_level, $severity, $hash_has_stack{$log_level}{$severity} // 1) ;
     }
 }
-
 
 done_testing();

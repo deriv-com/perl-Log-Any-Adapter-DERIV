@@ -238,7 +238,6 @@ sub log_entry {
         $self->apply_filehandle_utf8(\*STDERR);
         $self->{has_stderr_utf8} = 1;
     }
-    #print "log is " . encode_json_text($data) . "\n";
     $self->{fh}->print(encode_json_text($data) . "\n") if $self->{fh};
 
     my $txt = $self->{in_container} # docker tends to prefer JSON
@@ -257,8 +256,6 @@ sub process_data{
     # TODO clone data
     use Log::Any::Adapter::Util qw(numeric_level);
     use Data::Dumper;
-#    print Dumper($self);
-#    print Dumper($data);
     return $data if(numeric_level($data->{severity}) <= numeric_level('warn'));
     # now severity > warn
     return $data if $self->{log_level} >= numeric_level('debug');
