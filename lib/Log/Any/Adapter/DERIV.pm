@@ -65,8 +65,12 @@ use JSON::MaybeUTF8 qw(:v1);
 use PerlIO;
 use Term::ANSIColor;
 use Log::Any qw($log);
+use Log::Any::Adapter::Util qw(numeric_level);
+use Clone qw(clone);
+
 
 # Used for stringifying data more neatly than Data::Dumper might offer
+
 our $JSON = JSON::MaybeXS->new(
     # Multi-line for terminal output, single line if redirecting somewhere
     pretty          => (-t STDERR),
@@ -233,7 +237,7 @@ sub format_line {
 
 sub log_entry {
     my ($self, $data) = @_;
-    $data = $self->process_data($data);
+    $data = $self->_process_data($data);
     unless($self->{has_stderr_utf8}) {
         $self->apply_filehandle_utf8(\*STDERR);
         $self->{has_stderr_utf8} = 1;
@@ -250,12 +254,9 @@ sub log_entry {
     );
 }
 
-sub process_data{
+sub _process_data{
     my ($self, $data) = @_;
-
-    # TODO clone data
-    use Log::Any::Adapter::Util qw(numeric_level);
-    use Data::Dumper;
+    $data = clone($data);
     return $data if(numeric_level($data->{severity}) <= numeric_level('warn'));
     # now severity > warn
     return $data if $self->{log_level} >= numeric_level('debug');
