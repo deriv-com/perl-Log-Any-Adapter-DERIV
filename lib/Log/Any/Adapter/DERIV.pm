@@ -254,6 +254,15 @@ sub log_entry {
     );
 }
 
+=head2 _process_data
+
+Process the data before printing out.
+
+Parameters: $self, $data
+Return: processed data
+
+=cut
+
 sub _process_data{
     my ($self, $data) = @_;
     $data = clone($data);
