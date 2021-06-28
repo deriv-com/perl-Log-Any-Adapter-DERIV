@@ -302,7 +302,18 @@ sub log_entry {
 
 Process the data before printing out.
 
-Parameters: $self, $data
+Takes the following arguments as named parameters:
+
+=over 4
+
+=item * C<$self>
+
+=item * C<data>
+
+The log data.
+
+=back
+
 Return: processed data
 
 =cut
