@@ -321,7 +321,34 @@ Return: processed data
 sub _process_data {
     my ($self, $data) = @_;
     $data = clone($data);
-    $data = $self->collapse_future_stack($data);
+    $data = $self->_collapse_future_stack($data);
+    $data = $self->_filter_stack($data);
+    return $data;
+}
+
+=head2 _filter_stack
+
+In some cases we don't want to print stack info. This function is used to filter out the stack info.
+
+Takes the following arguments as named parameters:
+
+=over 4
+
+=item * C<$self>
+
+=item * C<data>
+
+The log data.
+
+=back
+
+Return: processed data
+
+
+=cut
+
+sub _filter_stack {
+    my ($self, $data) = @_;
     return $data if(numeric_level($data->{severity}) <= numeric_level('warn'));
     # now severity > warn
     return $data if $self->{log_level} >= numeric_level('debug');
@@ -329,7 +356,7 @@ sub _process_data {
     return $data;
 }
 
-=head2 collapse_future_stack
+=head2 _collapse_future_stack
 
 The future frames are too much and too tedious. This method will keep only one frame if there are many continuously future frames.
 Parameter: log data
@@ -337,7 +364,7 @@ Return: log data
 
 =cut
 
-sub collapse_future_stack{
+sub _collapse_future_stack{
     my ($self, $data) = @_;
     my $stack = $data->{stack};
     my @new_stack;
