@@ -100,6 +100,8 @@ use Path::Tiny;
 use curry;
 use JSON::MaybeUTF8 qw(:v1);
 use PerlIO;
+use Config;
+use Fcntl qw(:flock);
 use Term::ANSIColor;
 use Log::Any qw($log);
 
@@ -271,11 +273,17 @@ sub format_line {
         } @details;
 }
 
+my $HAS_FLOCK = $Config{d_flock} || $Config{d_fcntl_can_lock} || $Config{d_lockf};
+
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->collapse_future_stack($data);
 
-    $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
+    if($self->{json_fh}){
+        flock($self->{json_fh}, LOCK_EX) if $HAS_FLOCK;
+        $self->{json_fh}->print(encode_json_text($data) . "\n");
+        flock($self->{json_fh}, LOCK_UN) if $HAS_FLOCK;
+    }
 
     return unless $self->{stderr};
 
@@ -288,10 +296,12 @@ sub log_entry {
     ? encode_json_text($data)
     : $self->format_line($data, { colour => $self->{colour} });
 
+    flock(STDERR, LOCK_EX) if $HAS_FLOCK;
     # Regardless of the output, we always use newline separators
     STDERR->print(
         "$txt\n"
     );
+    flock(STDERR, LOCK_UN) if $HAS_FLOCK;
 }
 
 
