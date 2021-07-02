@@ -339,15 +339,21 @@ sub _in_container{
     return -r '/.dockerenv';
 }
 
+=head2 _linux_flock
+
+return 
+
+=cut
+
 # The following code is from https://docstore.mik.ua/orelly/perl4/cook/ch07_26.htm
 sub _linux_flock {
-    my ($type, $whence, $start, $len, $pid) = @_;
+    my ($type) = @_;
     my $FLOCK_STRUCT = "s s l l i";
-    return pack($FLOCK_STRUCT, $type, $whence, $start, $len, $pid);
+    return pack($FLOCK_STRUCT, $type, SEEK_SET, 0, 0, 0);
 }
 sub _lock{
     my ($fh) = @_;
-    my $lock = _linux_flock(F_WRLCK, SEEK_SET, 0, 0, 0);
+    my $lock = _linux_flock(F_WRLCK);
     my $result = fcntl($fh, F_SETLKW, $lock);
     return $result if $result;
     print STDERR "F_SETLKW @_: $!\n";
@@ -356,7 +362,7 @@ sub _lock{
 
 sub _unlock{
     my ($fh) = @_;
-    my $lock = _linux_flock(F_UNLCK, SEEK_SET, 0, 0, 0);
+    my $lock = _linux_flock(F_UNLCK);
     my $result = fcntl($fh, F_SETLKW, $lock);
     return $result if $result;
     print STDERR "F_SETLKW @_: $!\n";
