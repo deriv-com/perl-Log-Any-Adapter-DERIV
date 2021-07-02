@@ -101,9 +101,9 @@ use curry;
 use JSON::MaybeUTF8 qw(:v1);
 use PerlIO;
 use Config;
-use Fcntl qw(:flock);
 use Term::ANSIColor;
 use Log::Any qw($log);
+use Fcntl qw(:DEFAULT :seek :flock);
 
 # Used for stringifying data more neatly than Data::Dumper might offer
 our $JSON = JSON::MaybeXS->new(
@@ -273,16 +273,14 @@ sub format_line {
         } @details;
 }
 
-my $HAS_FLOCK = $Config{d_flock} || $Config{d_fcntl_can_lock} || $Config{d_lockf};
-
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->collapse_future_stack($data);
 
     if($self->{json_fh}){
-        flock($self->{json_fh}, LOCK_EX) if $HAS_FLOCK;
+        _lock($self->{json_fh});
         $self->{json_fh}->print(encode_json_text($data) . "\n");
-        flock($self->{json_fh}, LOCK_UN) if $HAS_FLOCK;
+        _unlock($self->{json_fh});
     }
 
     return unless $self->{stderr};
@@ -296,12 +294,12 @@ sub log_entry {
     ? encode_json_text($data)
     : $self->format_line($data, { colour => $self->{colour} });
 
-    flock(STDERR, LOCK_EX) if $HAS_FLOCK;
+    _lock(*STDERR);
     # Regardless of the output, we always use newline separators
     STDERR->print(
         "$txt\n"
     );
-    flock(STDERR, LOCK_UN) if $HAS_FLOCK;
+    _unlock(*STDERR);
 }
 
 
@@ -340,6 +338,31 @@ sub _stderr_is_tty{
 sub _in_container{
     return -r '/.dockerenv';
 }
+
+# The following code is from https://docstore.mik.ua/orelly/perl4/cook/ch07_26.htm
+sub _linux_flock {
+    my ($type, $whence, $start, $len, $pid) = @_;
+    my $FLOCK_STRUCT = "s s l l i";
+    return pack($FLOCK_STRUCT, $type, $whence, $start, $len, $pid);
+}
+sub _lock{
+    my ($fh) = @_;
+    my $lock = _linux_flock(F_WRLCK, SEEK_SET, 0, 0, 0);
+    my $result = fcntl($fh, F_SETLKW, $lock);
+    return $result if $result;
+    print STDERR "F_SETLKW @_: $!\n";
+    return undef;
+}
+
+sub _unlock{
+    my ($fh) = @_;
+    my $lock = _linux_flock(F_UNLCK, SEEK_SET, 0, 0, 0);
+    my $result = fcntl($fh, F_SETLKW, $lock);
+    return $result if $result;
+    print STDERR "F_SETLKW @_: $!\n";
+    return undef;
+}
+
 
 1;
 
