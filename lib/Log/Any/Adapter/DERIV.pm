@@ -341,7 +341,9 @@ sub _in_container{
 
 =head2 _linux_flock
 
-return 
+Param: lock type. It can be F_WRLCK or F_UNLCK
+
+return: A FLOCK structure
 
 =cut
 
@@ -351,6 +353,21 @@ sub _linux_flock {
     my $FLOCK_STRUCT = "s s l l i";
     return pack($FLOCK_STRUCT, $type, SEEK_SET, 0, 0, 0);
 }
+
+=head2 _lock
+
+Lock a file handler with fcntl.
+
+Param: fh - File handle
+
+Return: true or false
+
+=cut
+
+# We don't use `flock` function directly here
+# In some cases the program will do fork after the log file opened.
+# In such case every subprocess can get lock of the log file at the same time.
+# Using fcntl to lock a file can avoid this problem
 sub _lock{
     my ($fh) = @_;
     my $lock = _linux_flock(F_WRLCK);
@@ -359,6 +376,15 @@ sub _lock{
     print STDERR "F_SETLKW @_: $!\n";
     return undef;
 }
+
+=head2 _unlock
+
+Unlock a file handler locked by fcntl
+
+Param: fh - File handle
+Return: true or false
+
+=cut
 
 sub _unlock{
     my ($fh) = @_;
