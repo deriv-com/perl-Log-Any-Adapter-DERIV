@@ -400,7 +400,7 @@ sub _in_container {
     return -r '/.dockerenv';
 }
 
-=head2 _linux_flock
+=head2 _linux_flock_data
 
 Param: lock type. It can be F_WRLCK or F_UNLCK
 
@@ -409,12 +409,42 @@ return: A FLOCK structure
 =cut
 
 # The following code is from https://docstore.mik.ua/orelly/perl4/cook/ch07_26.htm
-sub _linux_flock {
+sub _linux_flock_data {
     my ($type) = @_;
     my $FLOCK_STRUCT = "s s l l i";
     return pack($FLOCK_STRUCT, $type, SEEK_SET, 0, 0, 0);
 }
 
+=head2 _flock
+
+call fcntl to lock or unlock a file handle
+
+Param:
+
+=over 4
+
+=item fh - file handle
+
+=item type - lock type, either F_WRLCK or F_UNLCK
+
+=back
+
+Return : true or false
+
+=cut
+
+# We don't use `flock` function directly here
+# In some cases the program will do fork after the log file opened.
+# In such case every subprocess can get lock of the log file at the same time.
+# Using fcntl to lock a file can avoid this problem
+sub _flock {
+    my ($fh, $type) = @_;
+    my $lock = _linux_flock_data($type);
+    my $result = fcntl($fh, F_SETLKW, $lock);
+    return $result if $result;
+    print STDERR "F_SETLKW @_: $!\n";
+    return undef;
+}
 =head2 _lock
 
 Lock a file handler with fcntl.
@@ -425,17 +455,9 @@ Return: true or false
 
 =cut
 
-# We don't use `flock` function directly here
-# In some cases the program will do fork after the log file opened.
-# In such case every subprocess can get lock of the log file at the same time.
-# Using fcntl to lock a file can avoid this problem
 sub _lock{
     my ($fh) = @_;
-    my $lock = _linux_flock(F_WRLCK);
-    my $result = fcntl($fh, F_SETLKW, $lock);
-    return $result if $result;
-    print STDERR "F_SETLKW @_: $!\n";
-    return undef;
+    return _flock($fh, F_WRLCK);
 }
 
 =head2 _unlock
@@ -449,11 +471,7 @@ Return: true or false
 
 sub _unlock{
     my ($fh) = @_;
-    my $lock = _linux_flock(F_UNLCK);
-    my $result = fcntl($fh, F_SETLKW, $lock);
-    return $result if $result;
-    print STDERR "F_SETLKW @_: $!\n";
-    return undef;
+    return _flock($fh, F_UNLCK);
 }
 
 
