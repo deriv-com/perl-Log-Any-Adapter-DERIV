@@ -7,6 +7,7 @@ use warnings;
 # AUTHORITY
 our $VERSION = '0.001';
 
+use feature qw(state);
 use parent qw(Log::Any::Adapter::Coderef);
 
 use utf8;
@@ -200,6 +201,15 @@ sub new {
     }
     # docker tends to prefer JSON
     $self->{stderr} = _in_container() ? 'json' : 'text' if ($self->{stderr} && $self->{stderr} ne 'json' && $self->{stderr} ne 'text');
+    if($self->{stderr}) {
+        $self->apply_filehandle_utf8(\*STDERR);
+    }
+
+    $self->{stdout} = _in_container() ? 'json' : 'text' if ($self->{stdout} && $self->{stdout} ne 'json' && $self->{stdout} ne 'text');
+    if($self->{stdout}) {
+        $self->apply_filehandle_utf8(\*STDOUT);
+    }
+
 
     # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
@@ -278,24 +288,19 @@ sub format_line {
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->_process_data($data);
-
-    $self->{json_fh}->print(encode_json_text($data) . "\n") if $self->{json_fh};
-
-    return unless $self->{stderr};
-
-    unless($self->{has_stderr_utf8}) {
-        $self->apply_filehandle_utf8(\*STDERR);
-        $self->{has_stderr_utf8} = 1;
+    my $get_json = sub {state $json_data = encode_json_text($data) . "\n"; return $json_data;};
+    my $get_text = sub {state $text_data = $self->format_line($data, { colour => $self->{colour} }) . "\n"; return $text_data;};
+    if($self->{json_fh}){
+        $self->{json_fh}->print($get_json->());
     }
-
-    my $txt = $self->{stderr} eq 'json'
-    ? encode_json_text($data)
-    : $self->format_line($data, { colour => $self->{colour} });
-
-    # Regardless of the output, we always use newline separators
-    STDERR->print(
-        "$txt\n"
-    );
+    for my $stdfile (qw(stderr stdout)){
+        next unless $self->{$stdfile};
+        my $txt = $self->{$stdfile} eq 'json'
+        ? $get_json->()
+        : $get_text->();
+    
+        $stdfile eq 'stderr' ? STDERR->print($txt) : STDOUT->print($txt);
+    }
 }
 
 =head2 _process_data
@@ -386,6 +391,10 @@ sub _collapse_future_stack{
 
 sub _stderr_is_tty {
    return -t STDERR;
+}
+
+sub _stdout_is_tty {
+   return -t STDOUT;
 }
 
 sub _in_container {
