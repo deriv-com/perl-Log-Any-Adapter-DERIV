@@ -108,7 +108,6 @@ use Clone qw(clone);
 
 
 # Used for stringifying data more neatly than Data::Dumper might offer
-#TODO move it to log_entry, test file and stderr and stdout
 our $JSON = JSON::MaybeXS->new(
     # Multi-line for terminal output, single line if redirecting somewhere
     pretty          => _fh_is_tty(\*STDERR),
@@ -149,7 +148,6 @@ our %SEVERITY_COLOUR = (
 
         chomp(
             my @new_params = map {
-                # TODO check if it is executed
                 eval { $JSON->encode($_) } // Log::Any::Proxy::_stringify_params($_)
             } @params
         );
