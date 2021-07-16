@@ -108,10 +108,10 @@ use Clone qw(clone);
 
 
 # Used for stringifying data more neatly than Data::Dumper might offer
-
+#TODO move it to log_entry, test file and stderr and stdout
 our $JSON = JSON::MaybeXS->new(
     # Multi-line for terminal output, single line if redirecting somewhere
-    pretty          => _stderr_is_tty(),
+    pretty          => _fh_is_tty(\*STDERR),
     # Be consistent
     canonical       => 1,
     # Try a bit harder to give useful output
@@ -149,6 +149,7 @@ our %SEVERITY_COLOUR = (
 
         chomp(
             my @new_params = map {
+                # TODO check if it is executed
                 eval { $JSON->encode($_) } // Log::Any::Proxy::_stringify_params($_)
             } @params
         );
@@ -186,7 +187,6 @@ $SIG{__DIE__} = sub {
 
 sub new {
     my ( $class, %args ) = @_;
-    $args{colour} //= _stderr_is_tty();
     my $self = $class->SUPER::new(sub { }, %args);
     # if there is json_log_file, then print json to that file
     if($self->{json_log_file}) {
@@ -199,17 +199,18 @@ sub new {
     if(!$self->{json_log_file} && !$self->{stderr}){
         $self->{stderr} = 1;
     }
-    # docker tends to prefer JSON
-    $self->{stderr} = _in_container() ? 'json' : 'text' if ($self->{stderr} && $self->{stderr} ne 'json' && $self->{stderr} ne 'text');
-    if($self->{stderr}) {
-        $self->apply_filehandle_utf8(\*STDERR);
+    
+    for my $stdfile (['stderr', \*STDERR], ['stdout', \*STDOUT]){
+        my ($name, $fh) = $stdfile->@*;
+        if($self->{$name}) {
+           $self->{$name} = {format => $self->{$name}} if ref($self->{$name}) ne 'HASH';
+           # docker tends to prefer JSON
+           $self->{$name}{format} = _in_container() ? 'json' : 'text' if (!$self->{$name}{format} || $self->{$name}{format} ne 'json' && $self->{$name}{format} ne 'text');
+           $self->apply_filehandle_utf8($fh);
+           $self->{$name}{fh} = $fh;
+           $self->{$name}{color} //= _fh_is_tty($fh);
+        }
     }
-
-    $self->{stdout} = _in_container() ? 'json' : 'text' if ($self->{stdout} && $self->{stdout} ne 'json' && $self->{stdout} ne 'text');
-    if($self->{stdout}) {
-        $self->apply_filehandle_utf8(\*STDOUT);
-    }
-
 
     # Keep a strong reference to this, since we expect to stick around until exit anyway
     $self->{code} = $self->curry::log_entry;
@@ -233,7 +234,7 @@ sub format_line {
     # With international development teams, no matter which spelling we choose
     # someone's going to get this wrong sooner or later... or to put another
     # way, we got country *and* western.
-    $opts->{colour} = $opts->{color} || $opts->{colour};
+    $opts->{color} = $opts->{color} || $opts->{color};
 
     # Expand formatting if necessary: it's not immediately clear how to defer
     # handling of structured data, the ->structured method doesn't have a way
@@ -254,10 +255,10 @@ sub format_line {
         $data->{message},
     );
 
-    # This is good enough if we're in non-colour mode
-    return join ' ', @details unless $opts->{colour};
+    # This is good enough if we're in non-color mode
+    return join ' ', @details unless $opts->{color};
 
-    my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
+    my @colors = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
 
     # Colour formatting codes applied at the start and end of each line, in case something else
     # gets inbetween us and the output
@@ -271,7 +272,7 @@ sub format_line {
         ),
         colored(
             $level,
-            @colours,
+            @colors,
         ),
         colored(
             $from,
@@ -280,7 +281,7 @@ sub format_line {
         map {
             colored(
                 $_,
-                @colours,
+                @colors,
             ),
         } @details;
 }
@@ -288,18 +289,19 @@ sub format_line {
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->_process_data($data);
-    my $get_json = sub {state $json_data = encode_json_text($data) . "\n"; return $json_data;};
-    my $get_text = sub {state $text_data = $self->format_line($data, { colour => $self->{colour} }) . "\n"; return $text_data;};
+    my $json_data;
+    my %text_data = ();
+    my $get_json = sub {$json_data //= encode_json_text($data) . "\n"; return $json_data;};
+    my $get_text = sub {my $color = shift // 0; $text_data{$color} //= $self->format_line($data, { color => $color }) . "\n"; return $text_data{$color};};
     if($self->{json_fh}){
         $self->{json_fh}->print($get_json->());
     }
     for my $stdfile (qw(stderr stdout)){
         next unless $self->{$stdfile};
-        my $txt = $self->{$stdfile} eq 'json'
+        my $txt = $self->{$stdfile}{format} eq 'json'
         ? $get_json->()
-        : $get_text->();
-    
-        $stdfile eq 'stderr' ? STDERR->print($txt) : STDOUT->print($txt);
+        : $get_text->($self->{$stdfile}{color});
+        $self->{$stdfile}{fh}->print($txt);
     }
 }
 
@@ -389,12 +391,9 @@ sub _collapse_future_stack{
     return $data;
 }
 
-sub _stderr_is_tty {
-   return -t STDERR;
-}
-
-sub _stdout_is_tty {
-   return -t STDOUT;
+sub _fh_is_tty {
+    my $fh = shift;
+   return -t $fh;
 }
 
 sub _in_container {

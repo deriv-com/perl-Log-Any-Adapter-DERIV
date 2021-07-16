@@ -16,17 +16,17 @@ set_fixed_time(1623247131);
 
 my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
 my $stderr_is_tty;
-$mocked_deriv->mock(
-    '_stderr_is_tty',
-    sub {
-        return $stderr_is_tty;
-    }
-);
 my $stdout_is_tty;
 $mocked_deriv->mock(
-    '_stdout_is_tty',
+    '_fh_is_tty',
     sub {
-        return $stdout_is_tty;
+        my $fh = shift;
+        if($fh eq \*STDERR){
+            return $stderr_is_tty;
+        }
+        else{
+            return $stdout_is_tty;
+        }
     }
 );
 
@@ -261,54 +261,42 @@ do_test(
     import_args   => { stdout => 1 },
     test_stdout   => 'text'
 );
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 0,
-#    import_args   => {},
-#    test_stdout   => 'text'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 0,
-#    import_args   => { stdout => 'text' },
-#    test_stdout   => 'text'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 0,
-#    import_args   => { stdout => 'json' },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 1,
-#    import_args   => { stdout => 1 },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 1,
-#    import_args   => {},
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 1,
-#    import_args   => { stdout => 'text' },
-#    test_stdout   => 'text'
-#);
-#do_test(
-#    stdout_is_tty => 0,
-#    in_container  => 1,
-#    import_args   => { stdout => 'json' },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 0,
-#    import_args   => { stdout => 1 },
-#    test_stdout   => 'color_text'
-#);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 0,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'text'
+);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 0,
+    import_args   => { stdout => 'json' },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stdout => 1 },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'text'
+);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stdout => 'json' },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 0,
+    import_args   => { stdout => 1 },
+    test_stdout   => 'color_text'
+);
 #do_test(
 #    stdout_is_tty => 1,
 #    in_container  => 0,
