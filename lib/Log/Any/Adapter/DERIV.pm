@@ -197,7 +197,7 @@ sub new {
     if(!$self->{json_log_file} && !$self->{stderr}){
         $self->{stderr} = 1;
     }
-    
+
     for my $stdfile (['stderr', \*STDERR], ['stdout', \*STDOUT]){
         my ($name, $fh) = $stdfile->@*;
         if($self->{$name}) {
