@@ -297,54 +297,42 @@ do_test(
     import_args   => { stdout => 1 },
     test_stdout   => 'color_text'
 );
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 0,
-#    import_args   => {},
-#    test_stdout   => 'color_text'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 0,
-#    import_args   => { stdout => 'text' },
-#    test_stdout   => 'color_text'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 0,
-#    import_args   => { stdout => 'json' },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 1,
-#    import_args   => {},
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 1,
-#    import_args   => { stdout => 1 },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 1,
-#    import_args   => { stdout => 'text' },
-#    test_stdout   => 'color_text'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 1,
-#    import_args   => { stdout => 'json' },
-#    test_stdout   => 'json'
-#);
-#do_test(
-#    stdout_is_tty => 1,
-#    in_container  => 1,
-#    import_args   => { json_log_file => "$json_log_file",stdout => 'json' },
-#    test_stdout   => 'json',
-#    test_json_file => 1,
-#);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 0,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'color_text'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 0,
+    import_args   => { stdout => 'json' },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 1,
+    import_args   => { stdout => 1 },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 1,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'color_text'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 1,
+    import_args   => { stdout => 'json' },
+    test_stdout   => 'json'
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 1,
+    import_args   => { json_log_file => "$json_log_file",stdout => 'json' },
+    test_stdout   => 'json',
+    test_json_file => 1,
+);
 
 done_testing();
