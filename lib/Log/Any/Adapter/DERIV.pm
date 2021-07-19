@@ -232,7 +232,7 @@ sub format_line {
     # With international development teams, no matter which spelling we choose
     # someone's going to get this wrong sooner or later... or to put another
     # way, we got country *and* western.
-    $opts->{color} = $opts->{color} || $opts->{color};
+    $opts->{colour} = $opts->{color} || $opts->{colour};
 
     # Expand formatting if necessary: it's not immediately clear how to defer
     # handling of structured data, the ->structured method doesn't have a way
@@ -253,10 +253,10 @@ sub format_line {
         $data->{message},
     );
 
-    # This is good enough if we're in non-color mode
-    return join ' ', @details unless $opts->{color};
+    # This is good enough if we're in non-colour mode
+    return join ' ', @details unless $opts->{colour};
 
-    my @colors = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
+    my @colours = ($SEVERITY_COLOUR{$data->{severity}} || die 'no severity definition found for ' . $data->{severity})->@*;
 
     # Colour formatting codes applied at the start and end of each line, in case something else
     # gets inbetween us and the output
@@ -270,7 +270,7 @@ sub format_line {
         ),
         colored(
             $level,
-            @colors,
+            @colours,
         ),
         colored(
             $from,
@@ -279,7 +279,7 @@ sub format_line {
         map {
             colored(
                 $_,
-                @colors,
+                @colours,
             ),
         } @details;
 }
