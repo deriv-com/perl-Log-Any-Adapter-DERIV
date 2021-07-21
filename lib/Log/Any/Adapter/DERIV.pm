@@ -104,7 +104,7 @@ use Config;
 use Term::ANSIColor;
 use Log::Any qw($log);
 use Fcntl qw(:DEFAULT :seek :flock);
-use Log::Any::Adapter::Util qw(numeric_level);
+use Log::Any::Adapter::Util qw(numeric_level logging_methods);
 use Clone qw(clone);
 
 
@@ -474,6 +474,12 @@ sub _unlock{
     return _flock($fh, F_UNLCK);
 }
 
+sub level_name {
+    my $self = shift;
+    my @methods = reverse logging_methods();
+    my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
+    return $num_to_name{$self->{log_level}};
+}
 
 1;
 
