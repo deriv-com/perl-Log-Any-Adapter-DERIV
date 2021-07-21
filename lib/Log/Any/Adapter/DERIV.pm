@@ -101,9 +101,11 @@ use Path::Tiny;
 use curry;
 use JSON::MaybeUTF8 qw(:v1);
 use PerlIO;
+use Config;
 use Term::ANSIColor;
 use Log::Any qw($log);
-use Log::Any::Adapter::Util qw(numeric_level);
+use Fcntl qw(:DEFAULT :seek :flock);
+use Log::Any::Adapter::Util qw(numeric_level logging_methods);
 use Clone qw(clone);
 
 
@@ -292,14 +294,19 @@ sub log_entry {
     my $get_json = sub {$json_data //= encode_json_text($data) . "\n"; return $json_data;};
     my $get_text = sub {my $color = shift // 0; $text_data{$color} //= $self->format_line($data, { color => $color }) . "\n"; return $text_data{$color};};
     if($self->{json_fh}){
+        _lock($self->{json_fh});
         $self->{json_fh}->print($get_json->());
+        _unlock($self->{json_fh});
     }
     for my $stdfile (qw(stderr stdout)){
         next unless $self->{$stdfile};
         my $txt = $self->{$stdfile}{format} eq 'json'
         ? $get_json->()
         : $get_text->($self->{$stdfile}{color});
-        $self->{$stdfile}{fh}->print($txt);
+        my $fh = $self->{$stdfile}{fh};
+        _lock($fh);
+        $fh->print($txt);
+        _unlock($fh);
     }
 }
 
@@ -396,6 +403,92 @@ sub _fh_is_tty {
 
 sub _in_container {
     return -r '/.dockerenv';
+}
+
+=head2 _linux_flock_data
+
+Param: lock type. It can be F_WRLCK or F_UNLCK
+
+return: A FLOCK structure
+
+=cut
+
+# The following code is from https://docstore.mik.ua/orelly/perl4/cook/ch07_26.htm
+sub _linux_flock_data {
+    my ($type) = @_;
+    my $FLOCK_STRUCT = "s s l l i";
+    return pack($FLOCK_STRUCT, $type, SEEK_SET, 0, 0, 0);
+}
+
+=head2 _flock
+
+call fcntl to lock or unlock a file handle
+
+Param:
+
+=over 4
+
+=item fh - file handle
+
+=item type - lock type, either F_WRLCK or F_UNLCK
+
+=back
+
+Return : true or false
+
+=cut
+
+# We don't use `flock` function directly here
+# In some cases the program will do fork after the log file opened.
+# In such case every subprocess can get lock of the log file at the same time.
+# Using fcntl to lock a file can avoid this problem
+sub _flock {
+    my ($fh, $type) = @_;
+    my $lock = _linux_flock_data($type);
+    my $result = fcntl($fh, F_SETLKW, $lock);
+    return $result if $result;
+    print STDERR "F_SETLKW @_: $!\n";
+    return undef;
+}
+=head2 _lock
+
+Lock a file handler with fcntl.
+
+Param: fh - File handle
+
+Return: true or false
+
+=cut
+
+sub _lock{
+    my ($fh) = @_;
+    return _flock($fh, F_WRLCK);
+}
+
+=head2 _unlock
+
+Unlock a file handler locked by fcntl
+
+Param: fh - File handle
+Return: true or false
+
+=cut
+
+sub _unlock{
+    my ($fh) = @_;
+    return _flock($fh, F_UNLCK);
+}
+=head2 level
+
+return the current log level name
+
+=cut
+
+sub level {
+    my $self = shift;
+    my @methods = reverse logging_methods();
+    my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
+    return $num_to_name{$self->{log_level}};
 }
 
 1;

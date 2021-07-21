@@ -95,6 +95,12 @@ sub do_test {
         $stdout_is_tty = $args{stdout_is_tty};
         $stderr_is_tty = $args{stderr_is_tty};
         $in_container  = $args{in_container};
+        if($args{test_stderr} || $args{test_stdout}){ #?????
+            # redirecting STDERR to a scalar will cause fcntl lock to error,
+            # here skip that lock function to avoid the error
+            $mocked_deriv->mock('_lock' => 1);
+            $mocked_deriv->mock('_unlock' => 1);
+        }
         call_log( $args{import_args} );
         if ( $args{test_json_file} ) {
             ok( $file_log_message, 'json file has logs' );
@@ -124,6 +130,7 @@ sub do_test {
                 test_text($stdout_log_message);
             }
         }
+        $mocked_deriv->unmock('_lock', '_unlock') if $mocked_deriv->is_mocked('_lock');
     }
 }
 
