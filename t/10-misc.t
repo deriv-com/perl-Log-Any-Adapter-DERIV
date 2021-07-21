@@ -11,7 +11,7 @@ use Log::Any::Adapter::Util qw(logging_methods);
 my @levels = logging_methods();
 for my $level (@levels){
     Log::Any::Adapter->import('DERIV', log_level => $level);
-    is($log->adapter->level_name, $level, "current level is $level");
+    is($log->adapter->level, $level, "current level is $level");
 }
 
 done_testing;

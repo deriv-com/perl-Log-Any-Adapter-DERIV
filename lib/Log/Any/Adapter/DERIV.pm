@@ -473,8 +473,13 @@ sub _unlock{
     my ($fh) = @_;
     return _flock($fh, F_UNLCK);
 }
+=head2 level
 
-sub level_name {
+return the current log level name
+
+=cut
+
+sub level {
     my $self = shift;
     my @methods = reverse logging_methods();
     my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
