@@ -3,6 +3,7 @@ package Log::Any::Adapter::DERIV;
 
 use strict;
 use warnings;
+use Data::Dumper;
 
 # AUTHORITY
 our $VERSION = '0.001';
@@ -246,9 +247,11 @@ sub format_line {
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
-    my $stack_len = scalar($data->{stack});
-    my $stack_trace = join "\n\t", $data->{stack}[0..$stack_len-2];
-    $from = $from . "\n\t" . $stack_trace;
+    my $stack_len = scalar(@{$data->{stack}});
+    my @call_stack = @{$data->{stack}}[0..$stack_len-2];
+    print Dumper(@call_stack);
+    # my $stack_trace = join "\n\t", $data->{stack}[0..$stack_len-2];
+    # $from = $from . "\n\t" . $stack_trace;
 
     # Start with the plain-text details
     my @details = (
