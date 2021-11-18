@@ -247,11 +247,8 @@ sub format_line {
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
-    my $stack_len = scalar(@{$data->{stack}});
-    my @call_stack = @{$data->{stack}}[0..$stack_len-2];
-    print Dumper(@call_stack);
-    # my $stack_trace = join "\n\t", $data->{stack}[0..$stack_len-2];
-    # $from = $from . "\n\t" . $stack_trace;
+    my $stack_trace = _get_stack_trace_as_string($data);
+    print $stack_trace;
 
     # Start with the plain-text details
     my @details = (
@@ -314,6 +311,39 @@ sub log_entry {
         $fh->print($txt);
         _unlock($fh);
     }
+}
+
+=head2 _get_stack_trace_as_string
+
+Get stack trace as a string from log data
+
+Takes the following arguments as named parameters:
+
+=over 4
+
+=item * C<data>
+
+The log data.
+
+=back
+
+Return: A stringified stack trace consisting of file and line number info
+
+=cut
+
+sub _get_stack_trace_as_string {
+    my $data = shift;
+    my $stack_len = scalar(@{$data->{stack}});
+    my @call_stack = @{$data->{stack}}[0..$stack_len-2];
+    my @stack_trace = qw //;
+    my $line;
+    my $file;
+    for (@call_stack) {
+        $line = $_->{line};
+        $file = $_->{file};
+        push @stack_trace, "at $file line $line";
+    }
+    return join "\n\t", @stack_trace;
 }
 
 =head2 _process_data
