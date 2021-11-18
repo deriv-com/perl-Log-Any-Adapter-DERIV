@@ -246,6 +246,9 @@ sub format_line {
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
+    my $stack_len = scalar($data->{stack});
+    my $stack_trace = join "\n\t", $data->{stack}[0..$stack_len-2];
+    $from = $from . "\n\t" . $stack_trace;
 
     # Start with the plain-text details
     my @details = (
