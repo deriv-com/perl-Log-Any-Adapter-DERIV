@@ -3,7 +3,6 @@ package Log::Any::Adapter::DERIV;
 
 use strict;
 use warnings;
-use Data::Dumper;
 
 # AUTHORITY
 our $VERSION = '0.001';
@@ -254,7 +253,7 @@ sub format_line {
         Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
         uc(substr $data->{severity}, 0, 1),
         "[$from]",
-        $data->{message} . "\n\t" . $stack_trace,
+        $data->{message} . "\t" . $stack_trace,
     );
 
     # This is good enough if we're in non-colour mode
