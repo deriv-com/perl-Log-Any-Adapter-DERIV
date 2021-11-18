@@ -248,14 +248,13 @@ sub format_line {
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
     my $stack_trace = _get_stack_trace_as_string($data);
-    print $stack_trace;
 
     # Start with the plain-text details
     my @details = (
         Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
         uc(substr $data->{severity}, 0, 1),
         "[$from]",
-        $data->{message},
+        $data->{message} . "\n\t" . $stack_trace,
     );
 
     # This is good enough if we're in non-colour mode
@@ -334,7 +333,7 @@ Return: A stringified stack trace consisting of file and line number info
 sub _get_stack_trace_as_string {
     my $data = shift;
     my $stack_len = scalar(@{$data->{stack}});
-    my @call_stack = @{$data->{stack}}[0..$stack_len-2];
+    my @call_stack = @{$data->{stack}}[0..$stack_len-1];
     my @stack_trace = qw //;
     my $line;
     my $file;
@@ -343,7 +342,7 @@ sub _get_stack_trace_as_string {
         $file = $_->{file};
         push @stack_trace, "at $file line $line";
     }
-    return join "\n\t", @stack_trace;
+    return join "\n\t", reverse @stack_trace;
 }
 
 =head2 _process_data
