@@ -341,7 +341,7 @@ sub _get_stack_trace_as_string {
         $file = $_->{file};
         push @stack_trace, "at $file line $line";
     }
-    return join "\n\t", reverse @stack_trace;
+    return join "\n\t", @stack_trace;
 }
 
 =head2 _process_data
