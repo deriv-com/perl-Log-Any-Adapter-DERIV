@@ -246,14 +246,22 @@ sub format_line {
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
-    my $stack_trace = _get_stack_trace_as_string($data);
+    
+    # An environment flag to enable disable stack traces for text mode. JSON will always send stack traces
+    # This is done so that original behavior is preserved when needed
+    my $stack_trace_enabled = $ENV{LOG_STACK_TRACE_ENABLED} // 1;
+    my $stack_trace = "";
+    if ($stack_trace_enabled) {
+        $stack_trace = _get_stack_trace_as_string($data);
+        $stack_trace = "\t" . $stack_trace;
+    }
 
     # Start with the plain-text details
     my @details = (
         Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
         uc(substr $data->{severity}, 0, 1),
         "[$from]",
-        $data->{message} . "\t" . $stack_trace,
+        $data->{message} . $stack_trace,
     );
 
     # This is good enough if we're in non-colour mode

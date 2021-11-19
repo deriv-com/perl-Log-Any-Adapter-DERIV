@@ -38,6 +38,9 @@ $mocked_deriv->mock(
     }
 );
 
+# export LOG_STACK_TRACE_ENABLED as false
+$ENV{LOG_STACK_TRACE_ENABLED} = 0;
+
 sub test_json {
     my $log_message = shift;
     chomp($log_message);
