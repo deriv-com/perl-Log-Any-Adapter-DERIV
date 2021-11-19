@@ -11,7 +11,7 @@ use JSON::MaybeUTF8 qw(:v1);
 use Test::Exception;
 use Sys::Hostname;
 use Test::MockModule;
-use Term::ANSIColor qw(colored);
+use Term::ANSIColor qw(colored colorstrip);
 set_fixed_time(1623247131);
 
 my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
@@ -59,13 +59,12 @@ sub test_color_text {
     my $want_stack_trace = shift;
     chomp($log_message);
     if ($want_stack_trace) {
-        print "\n\n\n---------------------------\n$log_message\n-----------------------------------\n\n\n";
         my @filtered_msg = split "\t",  $log_message; # all stack calls
         shift @filtered_msg; # remove first call
         is(scalar(@filtered_msg), 4, "Size of call stack is 4");
         my $regex = qr/at [A-Za-z0-9\/\.]+ line [0-9]+\s/mp;
         for (@filtered_msg) {
-            is($_, 1, "text matches");
+            is(colorstrip($_) =~ /$regex/g, 1, "text matches");
         }
     } else {
         my $expected_message = join " ",
