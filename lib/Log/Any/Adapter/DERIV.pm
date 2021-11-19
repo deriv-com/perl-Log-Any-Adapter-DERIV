@@ -246,7 +246,6 @@ sub format_line {
 
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
-
     # An environment flag to enable disable stack traces for text mode. JSON will always send stack traces
     # This is done so that original behavior is preserved when needed
     my $stack_trace_enabled = $ENV{LOG_STACK_TRACE_ENABLED} // 1;
