@@ -253,7 +253,7 @@ sub format_line {
     my $stack_trace = "";
     if ($stack_trace_enabled) {
         $stack_trace = _get_stack_trace_as_string($data);
-        $stack_trace = " " . $stack_trace . "\n";
+        $stack_trace = "\t" . $stack_trace . "\n";
     }
 
     # Start with the plain-text details

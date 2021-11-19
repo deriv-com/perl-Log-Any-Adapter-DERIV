@@ -61,7 +61,7 @@ sub test_color_text {
     if ($want_stack_trace) {
         my @filtered_msg = split "\t",  $log_message; # all stack calls
         shift @filtered_msg; # remove first call
-        is(scalar(@filtered_msg), 4, "Size of call stack is 4");
+        is(scalar(@filtered_msg), 5, "Size of call stack is 5");
         my $regex = qr/at [A-Za-z0-9\/\.]+ line [0-9]+\s/mp;
         for (@filtered_msg) {
             is(colorstrip($_) =~ /$regex/g, 1, "text matches");
@@ -83,7 +83,7 @@ sub test_text {
     if ($want_stack_trace) {
         my @filtered_msg = split "\t",  $log_message; # all stack calls
         shift @filtered_msg; # remove first call
-        is(scalar(@filtered_msg), 4, "Size of call stack is 4");
+        is(scalar(@filtered_msg), 5, "Size of call stack is 5");
         my $regex = qr/at [A-Za-z0-9\/\.]+ line [0-9]+\s/mp;
         for (@filtered_msg) {
             is($_ =~ /$regex/g, 1, "text matches");
