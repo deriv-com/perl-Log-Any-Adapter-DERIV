@@ -103,11 +103,9 @@ my $json_log_file = Path::Tiny->tempfile();
 sub call_log {
     my $import_args = shift;
     my $want_stack_trace = shift;
-
     if ($want_stack_trace) {
         $ENV{LOG_STACK_TRACE_ENABLED} = 1;
     }
-
     local *STDERR;
     local *STDOUT;
     $stderr_log_message = '';
@@ -118,7 +116,6 @@ sub call_log {
     Log::Any::Adapter->import( 'DERIV', $import_args->%* );
     $log->warn("This is a warn log");
     $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';
-    
     if ($want_stack_trace) {
         $ENV{LOG_STACK_TRACE_ENABLED} = 0;
     }
