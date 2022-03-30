@@ -11,7 +11,7 @@ use JSON::MaybeUTF8 qw(:v1);
 use Test::Exception;
 use Sys::Hostname;
 use Test::MockModule;
-use Term::ANSIColor qw(colored);
+use Term::ANSIColor qw(colored colorstrip);
 set_fixed_time(1623247131);
 
 my $mocked_deriv = Test::MockModule->new('Log::Any::Adapter::DERIV');
@@ -38,6 +38,9 @@ $mocked_deriv->mock(
     }
 );
 
+# export LOG_STACK_TRACE_ENABLED as false
+$ENV{LOG_STACK_TRACE_ENABLED} = 0;
+
 sub test_json {
     my $log_message = shift;
     chomp($log_message);
@@ -53,22 +56,45 @@ sub test_json {
 
 sub test_color_text {
     my $log_message = shift;
+    my $want_stack_trace = shift;
     chomp($log_message);
-    my $expected_message = join " ",
-      colored( '2021-06-09T13:58:51', 'bright_blue' ),
-      colored( 'W',                   'bright_yellow' ),
-      colored( '[main->do_test]',     'grey10' ),
-      colored( 'This is a warn log',  'bright_yellow' );
-    is( $log_message, $expected_message, "colored text ok" );
+    if ($want_stack_trace) {
+        my @filtered_msg = split "\t",  $log_message; # all stack calls
+        shift @filtered_msg; # remove first call
+        is(scalar(@filtered_msg), 5, "Size of call stack is 5");
+        my $regex = qr/at [A-Za-z0-9\/\.]+ line [0-9]+\s/mp;
+        for (@filtered_msg) {
+            is(colorstrip($_) =~ /$regex/g, 1, "text matches");
+        }
+    } else {
+        my $expected_message = join " ",
+          colored( '2021-06-09T13:58:51', 'bright_blue' ),
+          colored( 'W',                   'bright_yellow' ),
+          colored( '[main->do_test]',     'grey10' ),
+          colored( 'This is a warn log',  'bright_yellow' );
+        is( $log_message, $expected_message, "colored text ok" );
+    }
 }
 
 sub test_text {
     my $log_message = shift;
+    my $want_stack_trace = shift;
     chomp($log_message);
-    my $expected_message = join " ", '2021-06-09T13:58:51', 'W',
-      '[main->do_test]', 'This is a warn log';
-    is( $log_message, $expected_message, "text message ok" );
+    if ($want_stack_trace) {
+        my @filtered_msg = split "\t",  $log_message; # all stack calls
+        shift @filtered_msg; # remove first call
+        is(scalar(@filtered_msg), 5, "Size of call stack is 5");
+        my $regex = qr/at [A-Za-z0-9\/\.]+ line [0-9]+\s/mp;
+        for (@filtered_msg) {
+            is($_ =~ /$regex/g, 1, "text matches");
+        }
+    } else {
+        my $expected_message = join " ", '2021-06-09T13:58:51', 'W',
+          '[main->do_test]', 'This is a warn log';
+        is( $log_message, $expected_message, "text message ok" );
+    }
 }
+
 my $stderr_log_message;
 my $stdout_log_message;
 my $file_log_message;
@@ -76,7 +102,10 @@ my $json_log_file = Path::Tiny->tempfile();
 
 sub call_log {
     my $import_args = shift;
-
+    my $want_stack_trace = shift;
+    if ($want_stack_trace) {
+        $ENV{LOG_STACK_TRACE_ENABLED} = 1;
+    }
     local *STDERR;
     local *STDOUT;
     $stderr_log_message = '';
@@ -87,6 +116,9 @@ sub call_log {
     Log::Any::Adapter->import( 'DERIV', $import_args->%* );
     $log->warn("This is a warn log");
     $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';
+    if ($want_stack_trace) {
+        $ENV{LOG_STACK_TRACE_ENABLED} = 0;
+    }
 }
 
 sub do_test {
@@ -95,12 +127,13 @@ sub do_test {
         $stdout_is_tty = $args{stdout_is_tty};
         $stderr_is_tty = $args{stderr_is_tty};
         $in_container  = $args{in_container};
+        my $want_stack_trace = $args{stack_trace} // 0;
         if($args{test_stderr} || $args{test_stdout}){
             # redirecting STDERR to a scalar will cause fcntl lock to error,
             # here skip that lock function to avoid the error
             $mocked_deriv->noop('_lock', '_unlock');
         }
-        call_log( $args{import_args} );
+        call_log( $args{import_args}, $want_stack_trace );
         if ( $args{test_json_file} ) {
             ok( $file_log_message, 'json file has logs' );
             test_json($file_log_message);
@@ -123,10 +156,10 @@ sub do_test {
                 test_json($stdout_log_message);
             }
             elsif ( $args{test_stdout} eq 'color_text' ) {
-                test_color_text($stdout_log_message);
+                test_color_text($stdout_log_message, $want_stack_trace);
             }
             else {
-                test_text($stdout_log_message);
+                test_text($stdout_log_message, $want_stack_trace);
             }
         }
         $mocked_deriv->unmock('_lock', '_unlock') if $mocked_deriv->is_mocked('_lock');
@@ -339,6 +372,20 @@ do_test(
     import_args   => { json_log_file => "$json_log_file",stdout => 'json' },
     test_stdout   => 'json',
     test_json_file => 1,
+);
+do_test(
+    stdout_is_tty => 0,
+    in_container  => 1,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'text',
+    stack_trace   => 1
+);
+do_test(
+    stdout_is_tty => 1,
+    in_container  => 1,
+    import_args   => { stdout => 'text' },
+    test_stdout   => 'color_text',
+    stack_trace   => 1
 );
 
 done_testing();

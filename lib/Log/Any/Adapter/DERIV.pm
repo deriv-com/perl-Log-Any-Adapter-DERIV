@@ -296,12 +296,21 @@ sub format_line {
     # If we have a stack entry, report the context - default to "main" if we're at top level
     my $from = $data->{stack}[-1] ? join '->', @{$data->{stack}[-1]}{qw(package method)} : 'main';
 
+    # An environment flag to enable disable stack traces for text mode. JSON will always send stack traces
+    # This is done so that original behavior is preserved when needed
+    my $stack_trace_enabled = $ENV{LOG_STACK_TRACE_ENABLED} // 1;
+    my $stack_trace = "";
+    if ($stack_trace_enabled) {
+        $stack_trace = _get_stack_trace_as_string($data);
+        $stack_trace = "\t" . $stack_trace . "\n";
+    }
+
     # Start with the plain-text details
     my @details = (
         Time::Moment->from_epoch($data->{epoch})->strftime('%Y-%m-%dT%H:%M:%S%3f'),
         uc(substr $data->{severity}, 0, 1),
         "[$from]",
-        $data->{message}
+        $data->{message} . $stack_trace,
     );
 
     # This is good enough if we're in non-colour mode
@@ -377,6 +386,39 @@ sub log_entry {
         $fh->print($txt);
         _unlock($fh);
     }
+}
+
+=head2 _get_stack_trace_as_string
+
+Get stack trace as a string from log data
+
+Takes the following arguments as named parameters:
+
+=over 4
+
+=item * C<data>
+
+The log data.
+
+=back
+
+Return: A stringified stack trace consisting of file and line number info
+
+=cut
+
+sub _get_stack_trace_as_string {
+    my $data = shift;
+    my $stack_len = scalar(@{$data->{stack}});
+    my @call_stack = @{$data->{stack}}[0..$stack_len-1];
+    my @stack_trace = qw //;
+    my $line;
+    my $file;
+    for (@call_stack) {
+        $line = $_->{line};
+        $file = $_->{file};
+        push @stack_trace, "at $file line $line";
+    }
+    return join "\n\t", @stack_trace;
 }
 
 =head2 _process_data
