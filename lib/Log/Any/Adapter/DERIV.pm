@@ -459,7 +459,7 @@ sub _collapse_future_stack {
     my $previous_is_future;
 
     for my $frame ($stack->@*) {
-        if ($frame->{package} eq 'Future') {
+        if ($frame->{package} eq 'Future' || $frame->{package} eq 'Future::PP') {
             next if ($previous_is_future);
             push @new_stack, $frame;
             $previous_is_future = 1;

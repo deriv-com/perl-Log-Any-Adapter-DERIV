@@ -14,11 +14,11 @@ subtest '_collapse_future_stack' => sub {
         {
             'line' => 451,
             'file' => '/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm',
-            'package' => 'Future::PP',
+            'package' => 'Future',
             'method'  => '(eval)'
         },
         {
-            'package' => 'Future::PP',
+            'package' => 'Future',
             'file' => '/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm',
             'method' => '_mark_ready',
             'line'   => 625
@@ -76,7 +76,7 @@ subtest 'test collapse from message' => sub {
     my $message        = $get_message->($f1);
     my $expected_stack = [
         map { ; { package => $_ } } (
-            "Future",        "main",
+            "Future::PP",        "main",
             "main",          "Test::Builder",
             "Test::Builder", "Test::More",
             "main"
@@ -94,8 +94,8 @@ subtest 'test collapse from message' => sub {
     $message        = $get_message->($f1);
     $expected_stack = [
         map { ; { package => $_ } } (
-            "Future",        "main",
-            "Future",        "main",
+            "Future::PP",        "main",
+            "Future::PP",        "main",
             "main",          "Test::Builder",
             "Test::Builder", "Test::More",
             "main"
