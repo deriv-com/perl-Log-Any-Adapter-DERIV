@@ -14,11 +14,11 @@ subtest '_collapse_future_stack' => sub {
         {
             'line' => 451,
             'file' => '/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm',
-            'package' => 'Future',
+            'package' => 'Future::PP',
             'method'  => '(eval)'
         },
         {
-            'package' => 'Future',
+            'package' => 'Future::PP',
             'file' => '/home/git/regentmarkets/cpan/local/lib/perl5/Future.pm',
             'method' => '_mark_ready',
             'line'   => 625
