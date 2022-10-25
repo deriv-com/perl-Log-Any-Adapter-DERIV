@@ -76,7 +76,7 @@ subtest 'test collapse from message' => sub {
     my $message        = $get_message->($f1);
     my $expected_stack = [
         map { ; { package => $_ } } (
-            "Future::PP",        "main",
+            "Future",        "main",
             "main",          "Test::Builder",
             "Test::Builder", "Test::More",
             "main"
@@ -94,8 +94,8 @@ subtest 'test collapse from message' => sub {
     $message        = $get_message->($f1);
     $expected_stack = [
         map { ; { package => $_ } } (
-            "Future::PP",        "main",
-            "Future::PP",        "main",
+            "Future",        "main",
+            "Future",        "main",
             "main",          "Test::Builder",
             "Test::Builder", "Test::More",
             "main"
