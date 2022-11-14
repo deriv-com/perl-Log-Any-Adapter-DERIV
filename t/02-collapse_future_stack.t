@@ -92,7 +92,7 @@ subtest 'test collapse from message' => sub {
     my $f4 = $f2->then_done->then_done->then(
         sub { $log->debug("this is a debug message"); Future->done } );
     $message        = $get_message->($f1);
-    # TODO test future version ,and according to version, use Future or Future::PP
+
     $expected_stack = [
         map { ; { package => $_ } } (
             "Future::PP",        "main",
