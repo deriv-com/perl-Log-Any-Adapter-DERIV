@@ -24,7 +24,6 @@ my %WriteMakefileArgs = (
     "Fcntl" => 0,
     "File::HomeDir" => 0,
     "Future" => "0.49",
-    "JSON" => 0,
     "JSON::MaybeUTF8" => "1.002",
     "Log::Any" => "1.709",
     "Log::Any::Adapter::Coderef" => "0.002",
@@ -58,7 +57,7 @@ my %WriteMakefileArgs = (
     "Test::MockTime::HiRes" => 0,
     "Test::More" => "0.98"
   },
-  "VERSION" => "0.004",
+  "VERSION" => "0.005",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -74,7 +73,6 @@ my %FallbackPrereqs = (
   "Future" => "0.49",
   "IO::Handle" => 0,
   "IPC::Open3" => 0,
-  "JSON" => 0,
   "JSON::MaybeUTF8" => "1.002",
   "Log::Any" => "1.709",
   "Log::Any::Adapter" => 0,
