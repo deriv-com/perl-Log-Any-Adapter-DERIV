@@ -11,7 +11,6 @@ use feature qw(state);
 use parent qw(Log::Any::Adapter::Coderef);
 
 use utf8;
-use JSON;
 =encoding utf8
 
 =head1 NAME
@@ -373,7 +372,7 @@ sub log_entry {
         foreach my $key (keys %{$self->{context}}) {
             $log_data{$key} = $self->{context}->{$key};
         }
-        my $json_string = encode_json(\%log_data);
+        my $json_string = $JSON->encode(\%log_data);
         $data->{message} = $json_string;
     }  
 
