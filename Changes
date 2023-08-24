@@ -2,6 +2,9 @@
 Revision history for Log-Any-Adapter-DERIV
 {{$NEXT}}
 
+
+    - key setting
+
 0.004     2023-08-18 10:23:38+00:00 UTC
     - structured logging support
 
