@@ -639,6 +639,28 @@ sub level {
     return $num_to_name{$self->{log_level}};
 }
 
+=head2 set_context
+
+Set the log context - hash
+
+=cut
+
+sub set_context {
+    my ($self, $context) = @_;
+    $self->{context} = $context;
+}
+
+=head2 clear_context
+
+remove the log context - hash
+
+=cut
+
+sub clear_context {
+    my ($self) = @_;
+    delete $self->{context};
+}
+
 1;
 
 =head1 AUTHOR
