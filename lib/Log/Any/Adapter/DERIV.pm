@@ -358,26 +358,10 @@ sub log_entry {
     my $get_text =
         sub { my $color = shift // 0; $text_data{$color} //= $self->format_line($data, {color => $color}) . "\n"; return $text_data{$color}; };
 
-    # remove substitution context from message
-    if ($data->{message})
-    {
-        $data->{message} =~ s/\".*//;
-    }  
-    # Prepare the JSON object with the required fields
-    my %log_data = (
-        message   => $data->{message},
-        severity  => $data->{severity},
-    );    
-    
-    if ($self->{context} && ref($self->{context}) eq 'HASH'){
-        my @keys = keys %{$self->{context}}; # Get the keys from the context hash
- 
-        foreach my $key (@keys) {
-            $log_data{$key} = $self->{context}->{$key};
-        }
-        my $json_string = $JSON->encode(\%log_data);
-        $data->{message} = $json_string;
-    }  
+    # Iterate over the keys in $self->{context}
+    foreach my $key (keys %{$self->{context}}) {
+        $data->{$key} = $self->{context}->{$key};
+    }
 
     if ($self->{json_fh}) {
         _lock($self->{json_fh});

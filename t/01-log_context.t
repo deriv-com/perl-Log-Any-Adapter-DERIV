@@ -20,24 +20,12 @@ my $data = {
     severity => 'info',
 };
 
-# the below code is copied from adapter code for substitution testing
-if ($data->{message}) {
-    $data->{message} =~ s/\".*//;
-}
-my %log_data = (
-    message   => $data->{message},
-    severity  => $data->{severity},
-);
-if ($context && ref($context) eq 'HASH') {
-    my @keys = keys %$context;
-    foreach my $key (@keys) {
-        $log_data{$key} = $context->{$key};
-    }
-    my $json_string = $JSON->encode(\%log_data);
-    $data->{message} = $json_string;
+foreach my $key (keys %{$context}) {
+    $data->{$key} = $context->{$key};
 }
 
-is($data->{message}, '{"key1":"value1","key2":"value2","message":"This is a test message ","severity":"info"}', 'Message is modified as expected');
+is($data->{key1}, 'value1', 'key1 is part of data');
+is($data->{key2}, 'value2', 'key2 is part of data');
 
 $adapter->clear_context;
 is($adapter->{context}, undef, 'clear_context removes the context');
