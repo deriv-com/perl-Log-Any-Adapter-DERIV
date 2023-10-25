@@ -141,7 +141,7 @@ our %SEVERITY_COLOUR = (
     fatal    => [qw(red bold)],
     critical => [qw(red bold)],
 );
-
+my $adapter_context;
 my @methods     = reverse logging_methods();
 my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
 
@@ -627,33 +627,33 @@ add context key value pair into data object
 
 sub _process_context {
     my ($self, $data) = @_;
-    # Iterate over the keys in $self->{context} if it exists
-    foreach my $key (keys %{$self->{context}}) {
-            $data->{$key} = $self->{context}->{$key};
+    # Iterate over the keys in $adapter_context
+    foreach my $key (keys %{$adapter_context}) {
+            $data->{$key} = $adapter_context->{$key};
     }
     return $data;
 }
 
 =head2 set_context
 
-Set the log context - hash
+Set the log context hash
 
 =cut
 
 sub set_context {
     my ($self, $context) = @_;
-    $self->{context} = $context;
+    $adapter_context = $context;
 }
 
 =head2 clear_context
 
-remove the log context - hash
+undef the log context hash
 
 =cut
 
 sub clear_context {
     my ($self) = @_;
-    delete $self->{context};
+    $adapter_context= undef;
 }
 
 1;
