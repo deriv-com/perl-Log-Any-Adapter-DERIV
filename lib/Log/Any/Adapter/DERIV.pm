@@ -352,16 +352,12 @@ Add format and add color code using C<format_line> and writes the log entry
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->_process_data($data);
+    $data = $self->_process_context($data);
     my $json_data;
     my %text_data = ();
     my $get_json  = sub { $json_data //= encode_json_text($data) . "\n"; return $json_data; };
     my $get_text =
         sub { my $color = shift // 0; $text_data{$color} //= $self->format_line($data, {color => $color}) . "\n"; return $text_data{$color}; };
-
-    # Iterate over the keys in $self->{context}
-    foreach my $key (keys %{$self->{context}}) {
-        $data->{$key} = $self->{context}->{$key};
-    }
 
     if ($self->{json_fh}) {
         _lock($self->{json_fh});
@@ -621,6 +617,21 @@ Return the current log level name.
 sub level {
     my $self = shift;
     return $num_to_name{$self->{log_level}};
+}
+
+=head2 _process_context
+
+add context key value pair into data object
+
+=cut
+
+sub _process_context {
+    my ($self, $data) = @_;
+    # Iterate over the keys in $self->{context} if it exists
+    foreach my $key (keys %{$self->{context}}) {
+            $data->{$key} = $self->{context}->{$key};
+    }
+    return $data;
 }
 
 =head2 set_context

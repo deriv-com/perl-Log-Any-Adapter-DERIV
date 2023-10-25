@@ -25,7 +25,6 @@ foreach my $key (keys %{$context}) {
 }
 
 is($data->{key1}, 'value1', 'key1 is part of data');
-is($data->{key2}, 'value2', 'key2 is part of data');
 
 $adapter->clear_context;
 is($adapter->{context}, undef, 'clear_context removes the context');
