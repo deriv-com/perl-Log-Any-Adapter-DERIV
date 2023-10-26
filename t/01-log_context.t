@@ -11,12 +11,13 @@ use Test::Exception;
 use Test::MockModule;
 
 my $file_log_message;
+# create a temporary file to store the log message
 my $json_log_file = Path::Tiny->tempfile();
 
+# log message in file and check set_context and clear_context works fine with the log message
 sub do_context_text {
     my %args = @_;
 
-    # Remove this line to avoid empty string initialization
     $file_log_message = '';
     $json_log_file->remove;
     Log::Any::Adapter->import('DERIV', $args{import_args}->%*);
@@ -26,9 +27,26 @@ sub do_context_text {
     chomp($file_log_message);
     lives_ok { $file_log_message = decode_json_text($file_log_message) }
     'log message is a valid json';
-    # Read the log message from the file  
-    is( $file_log_message->{correlation_id},     '1241421662',           "context ok" );
-    $log->adapter->clear_context;
+
+    # test to verify that correlation_id is present in the log message after set_context
+    is( $file_log_message->{correlation_id}, '1241421662', "context ok" );
+    $log->adapter->clear_context();
+
+    # Create a new log message after clearing the context
+    $log->warn("This is a new warn log");
+    $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';
+    chomp($file_log_message);
+    lives_ok { $file_log_message = eval { decode_json_text($file_log_message) } }
+    'new log message is a valid JSON';
+
+    # this added to debug log message after clear context
+    if ($@) {
+        diag("Error decoding new log message: $@");
+        diag("New log message content: $file_log_message");
+    }
+
+    # test to verify that correlation_id is not present in the new log message after clear_context
+    is($file_log_message->{correlation_id}, undef, "correlation_id not present in new log message");
 }
 
 do_context_text(
