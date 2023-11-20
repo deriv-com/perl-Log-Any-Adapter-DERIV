@@ -204,6 +204,18 @@ Returns boolean
 
 Return the current log level name.
 
+## \_process\_context
+
+add context key value pair into data object
+
+## set\_context
+
+Set the log context hash
+
+## clear\_context
+
+undef the log context hash
+
 # AUTHOR
 
 Deriv Group Services Ltd. `DERIV@cpan.org`

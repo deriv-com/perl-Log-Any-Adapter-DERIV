@@ -5,13 +5,12 @@ use strict;
 use warnings;
 
 # AUTHORITY
-our $VERSION = '0.004';
+our $VERSION = '0.006';
 
 use feature qw(state);
 use parent qw(Log::Any::Adapter::Coderef);
 
 use utf8;
-
 =encoding utf8
 
 =head1 NAME
@@ -142,7 +141,7 @@ our %SEVERITY_COLOUR = (
     fatal    => [qw(red bold)],
     critical => [qw(red bold)],
 );
-
+my $adapter_context;
 my @methods     = reverse logging_methods();
 my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
 
@@ -353,6 +352,7 @@ Add format and add color code using C<format_line> and writes the log entry
 sub log_entry {
     my ($self, $data) = @_;
     $data = $self->_process_data($data);
+    $data = $self->_process_context($data);
     my $json_data;
     my %text_data = ();
     my $get_json  = sub { $json_data //= encode_json_text($data) . "\n"; return $json_data; };
@@ -617,6 +617,43 @@ Return the current log level name.
 sub level {
     my $self = shift;
     return $num_to_name{$self->{log_level}};
+}
+
+=head2 _process_context
+
+add context key value pair into data object
+
+=cut
+
+sub _process_context {
+    my ($self, $data) = @_;
+    # Iterate over the keys in $adapter_context
+    foreach my $key (keys %{$adapter_context}) {
+            $data->{$key} = $adapter_context->{$key};
+    }
+    return $data;
+}
+
+=head2 set_context
+
+Set the log context hash
+
+=cut
+
+sub set_context {
+    my ($self, $context) = @_;
+    $adapter_context = $context;
+}
+
+=head2 clear_context
+
+undef the log context hash
+
+=cut
+
+sub clear_context {
+    my ($self) = @_;
+    $adapter_context= undef;
 }
 
 1;
