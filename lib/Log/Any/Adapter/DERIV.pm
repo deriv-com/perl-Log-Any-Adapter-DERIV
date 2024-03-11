@@ -9,6 +9,7 @@ our $VERSION = '0.006';
 
 use feature qw(state);
 use parent qw(Log::Any::Adapter::Coderef);
+use Syntax::Keyword::Try;
 
 use utf8;
 =encoding utf8
@@ -141,6 +142,21 @@ our %SEVERITY_COLOUR = (
     fatal    => [qw(red bold)],
     critical => [qw(red bold)],
 );
+
+# Define a lookup hash reference for all sensitive data regex patterns to be logged
+our $sensitive_patterns = {
+    'PII' => [
+        qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,  # Email
+    ],
+    'Sensitive' => [
+        qr/\b(?:token|api[ _-]?key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
+    ],
+    'Token' => [
+        qr/a1\-[a-zA-Z0-9\-]{29}/,  #oauth Token pattern
+        qr/[a-zA-Z0-9\-]{15}/, #API Token pattern
+    ],
+};
+
 my $adapter_context;
 my @methods     = reverse logging_methods();
 my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
@@ -654,6 +670,43 @@ undef the log context hash
 sub clear_context {
     my ($self) = @_;
     $adapter_context= undef;
+}
+
+=head2 mask_sensitive
+
+Mask sensitive data in the message and logs error in case of failure
+
+=over 4
+
+=item * C<$message> string - The message to be masked
+
+=back
+
+Returns string - The masked message
+
+=cut
+
+sub mask_sensitive {
+    my ($message) = @_;
+
+    try {
+        foreach my $category (keys %$sensitive_patterns) {
+            foreach my $pattern (@{$sensitive_patterns->{$category}}) {
+                $message =~ s/$pattern/'*' x length($&)/ige;  
+            }
+        }
+    } catch ($e) {
+        # Disable the custom warning handler temporarily to avoid potential recursion issues.
+        local $SIG{__WARN__} = undef;
+
+        # Extract the error message from the exception.
+        chomp(my $error_msg = $e);
+
+        # Log the error for further investigation and troubleshooting.
+        $log->warn("Error in mask_sensitive: $error_msg");
+    };
+
+    return $message;
 }
 
 1;
