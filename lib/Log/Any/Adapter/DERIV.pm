@@ -143,20 +143,6 @@ our %SEVERITY_COLOUR = (
     critical => [qw(red bold)],
 );
 
-# Define a lookup hash reference for all sensitive data regex patterns to be logged
-our $sensitive_patterns = {
-    'PII' => [
-        qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,  # Email
-    ],
-    'Sensitive' => [
-        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
-    ],
-    'Token' => [
-        qr/a1\-[a-zA-Z0-9\-]{29}/,  #oauth Token pattern
-        qr/[a-zA-Z0-9\-]{15}/, #API Token pattern
-    ],
-};
-
 my $adapter_context;
 my @methods     = reverse logging_methods();
 my %num_to_name = map {$_ => $methods[$_]} 0..$#methods;
@@ -689,6 +675,20 @@ Returns string - The masked message
 
 sub mask_sensitive {
     my ($message) = @_;
+
+    # Define a lookup hash reference for all sensitive data regex patterns to be logged
+    my $sensitive_patterns = {
+        'PII' => [
+            qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,  # Email
+        ],
+        'Sensitive' => [
+            qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
+        ],
+        'Token' => [
+            qr/a1\-[a-zA-Z0-9\-]{29}/,  #oauth Token pattern
+            qr/[a-zA-Z0-9\-]{15}/, #API Token pattern
+        ],
+    };
 
     try {
         foreach my $category (keys %$sensitive_patterns) {
