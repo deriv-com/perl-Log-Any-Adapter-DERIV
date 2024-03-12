@@ -149,7 +149,7 @@ our $sensitive_patterns = {
         qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,  # Email
     ],
     'Sensitive' => [
-        qr/\b(?:token|api[ _-]?key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
+        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
     ],
     'Token' => [
         qr/a1\-[a-zA-Z0-9\-]{29}/,  #oauth Token pattern
@@ -369,6 +369,7 @@ sub log_entry {
     my ($self, $data) = @_;
     $data = $self->_process_data($data);
     $data = $self->_process_context($data);
+    $data->{message} = mask_sensitive($data->{message});
     my $json_data;
     my %text_data = ();
     my $get_json  = sub { $json_data //= encode_json_text($data) . "\n"; return $json_data; };

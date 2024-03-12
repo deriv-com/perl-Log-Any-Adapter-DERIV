@@ -7,9 +7,6 @@ use Log::Any qw($log);
 use Log::Any::Adapter;
 use Path::Tiny;
 use JSON::MaybeUTF8 qw(:v1);
-use Test::Exception;
-use Test::MockModule;
-use Try::Tiny;
 
 my $file_log_message;
 # create a temporary file to store the log message
@@ -28,14 +25,16 @@ sub do_sensitive_mask_test {
     my $oauth_token = 'a1-Mr3GSXISsKGOeDYzvacEbSwC2mk0w';
 
     $log->warn("User $email is logged in");
-    $log->warn("The API key: $api_key");
+    $log->warn("The API key: $api_key and the rest of the message is ABC");
     $log->warn("The API token = $api_token");
     $log->warn("The OAuth token is $oauth_token");
     
     my @expected_masked_messages = (
-        "User $email is logged in",
-        "The API key: " . '*' x length($api_key),
-        "The API token = " . '*' x length($api_token),
+        "User " . '*' x length($email) . " is logged in",
+        #word key and token with space 'and =: is' will be masked too as we have multiple variations 
+        #and from regex extracting $1 $2 is not a good approach hence we will mask full text 
+        "The API *****". '*' x length($api_key) . " and the rest of the message is ABC", 
+        "The API ********" . '*' x length($api_token),
         "The OAuth token is " . '*' x length($oauth_token),
     );
 
@@ -59,3 +58,5 @@ do_sensitive_mask_test(
     import_args    => {json_log_file => "$json_log_file"},
     test_json_file => 1,
 );
+
+ done_testing();
