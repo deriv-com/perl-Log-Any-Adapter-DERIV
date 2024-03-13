@@ -16,7 +16,7 @@ Revision history for Log-Any-Adapter-DERIV
     - structured logging support
 
 0.003     2022-11-23 08:34:16+00:00 UTC
-    - fix failure under new Future v0.49l
+    - fix failure under new Future v0.49
 
 0.002   2021-10-28 05:30:00+00:00 UTC
     pod improvement
