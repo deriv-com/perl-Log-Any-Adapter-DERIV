@@ -23,11 +23,14 @@ sub do_sensitive_mask_test {
     my $api_key = '23892jsjdkajdad';
     my $api_token = 'jsahjdasdpdpadka';
     my $oauth_token = 'a1-Mr3GSXISsKGOeDYzvacEbSwC2mk0w';
+    my $ctrader_token = 'ct1-Mr3GSXISsKGOeDYzvacEbSwC2mk0w';
+    my $refresh_token = 'r1-Mr3GSXISsKGOeDYzvacEbSwC2mk0w';
 
     $log->warn("User $email is logged in");
     $log->warn("The API key: $api_key and the rest of the message is ABC");
     $log->warn("The API token = $api_token");
     $log->warn("The OAuth token is $oauth_token");
+    $log->warn("The cTrader token is $ctrader_token and the refresh token is $refresh_token");
     
     my @expected_masked_messages = (
         "User " . '*' x length($email) . " is logged in",
@@ -36,6 +39,7 @@ sub do_sensitive_mask_test {
         "The API *****". '*' x length($api_key) . " and the rest of the message is ABC", 
         "The API ********" . '*' x length($api_token),
         "The OAuth token is " . '*' x length($oauth_token),
+        "The cTrader token is " . '*' x length($ctrader_token) . " and the refresh token is " . '*' x length($refresh_token),
     );
 
     $file_log_message = $json_log_file->exists ? $json_log_file->slurp : '';

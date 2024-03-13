@@ -685,8 +685,8 @@ sub mask_sensitive {
             qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
         ],
         'Token' => [
-            qr/a1|r1|ct1\-[a-zA-Z0-9]{29}/,  # OAuth, Refresh and CTrader token patterns
-            qr/[a-zA-Z0-9]{15}/, #API Token pattern
+            qr/(?:a1|r1|ct1)-[a-zA-Z0-9]{29}/,  # OAuth, Refresh, and CTrader token patterns
+            qr/[a-zA-Z0-9]{15}/,                  # API Token pattern
         ],
     };
 
