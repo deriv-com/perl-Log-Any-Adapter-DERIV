@@ -676,25 +676,19 @@ Returns string - The masked message
 sub mask_sensitive {
     my ($message) = @_;
 
-    # Define a lookup hash reference for all sensitive data regex patterns to be logged
-    my $sensitive_patterns = {
-        'PII' => [
-            qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,  # Email
-        ],
-        'Sensitive' => [
-            qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, # token or api key
-        ],
-        'Token' => [
-            qr/(?:a1|r1|ct1)-[a-zA-Z0-9]{29}/,  # OAuth, Refresh, and CTrader token patterns
-            qr/[a-zA-Z0-9]{15}/,                  # API Token pattern
-        ],
-    };
+    # Define a lookup list for all sensitive data regex patterns to be logged
+
+    my @sensitive_patterns = (
+        qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, #Email
+        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, #Token or API key , = : value 
+        qr/(?:a1|r1|ct1)-[a-zA-Z0-9]{29}/, #OAuth, Refresh, and CTrader token patterns
+        qr/[a-zA-Z0-9]{15}/,  #API Token pattern
+    );
+
 
     try {
-        foreach my $category (keys %$sensitive_patterns) {
-            foreach my $pattern (@{$sensitive_patterns->{$category}}) {
-                $message =~ s/$pattern/'*' x length($&)/ige;  
-            }
+        foreach my $pattern (@sensitive_patterns) {
+            $message =~ s/$pattern/'*' x length($&)/ige;
         }
     } catch ($e) {
         # Disable the custom warning handler temporarily to avoid potential recursion issues.

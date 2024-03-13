@@ -7,6 +7,8 @@ use Log::Any qw($log);
 use Log::Any::Adapter;
 use Path::Tiny;
 use JSON::MaybeUTF8 qw(:v1);
+use Test::MockModule;
+use Syntax::Keyword::Try;
 
 my $file_log_message;
 # create a temporary file to store the log message
@@ -55,7 +57,6 @@ sub do_sensitive_mask_test {
     }
 }
 
-
 do_sensitive_mask_test(
     stderr_is_tty  => 0,
     in_container   => 0,
@@ -63,4 +64,22 @@ do_sensitive_mask_test(
     test_json_file => 1,
 );
 
- done_testing();
+subtest 'Check error handling in mask_sensitive' => sub {
+
+    my $mock_module = Test::MockModule->new('Log::Any::Adapter::DERIV');
+    $mock_module->mock('mask_sensitive', sub { die "Mock error" }); #this will raise exception
+
+    my $result;
+    try {
+       $log->warn("This message should throw exception");
+    } catch ($error_msg){
+        like($error_msg, qr/Mock error/, "Error message contains 'Mock error'");
+        $result = undef; 
+    };
+
+    ok(!defined($result), "Exception was raised as expected");
+
+    $mock_module->unmock_all();
+};
+
+done_testing();
