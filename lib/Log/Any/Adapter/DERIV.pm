@@ -679,16 +679,16 @@ sub mask_sensitive {
     # Define a lookup list for all sensitive data regex patterns to be logged
 
     my @sensitive_patterns = (
-        qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, #Email
-        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/, #Token or API key , = : value 
-        qr/(?:a1|r1|ct1)-[a-zA-Z0-9]{29}/, #OAuth, Refresh, and CTrader token patterns
-        qr/[a-zA-Z0-9]{15}/,  #API Token pattern
+        qr/\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b/i, #Email
+        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, #Token or API key , = : value 
+        qr/(?:a1|r1|ct1)-[a-z0-9]{29}/i, #OAuth, Refresh, and CTrader token patterns
+        qr/[a-z0-9]{15}/i,  #API Token pattern
     );
 
 
     try {
         foreach my $pattern (@sensitive_patterns) {
-            $message =~ s/$pattern/'*' x length($&)/ige;
+            $message =~ s/$pattern/'*' x length($&)/ge;
         }
     } catch ($e) {
         # Disable the custom warning handler temporarily to avoid potential recursion issues.
