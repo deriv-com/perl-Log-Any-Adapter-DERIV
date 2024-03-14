@@ -34,6 +34,7 @@ sub do_sensitive_mask_test {
     $log->warn("The OAuth token is $oauth_token");
     $log->warn("The cTrader token is $ctrader_token and the refresh token is $refresh_token");
     $log->warn("This message should not have any sensitive data masked");
+    $log->warn("This token is ABCHSHJAJ user key not have any sensitive data masked");
 
     
     my @expected_masked_messages = (
@@ -65,6 +66,9 @@ do_sensitive_mask_test(
     import_args    => {json_log_file => "$json_log_file"},
     test_json_file => 1,
 );
+
+# Test error handling for exception case in mask_sensitive to ensure that exception is
+# raised and handled properly with no recursive loop
 
 subtest 'Check error handling in mask_sensitive' => sub {
 
