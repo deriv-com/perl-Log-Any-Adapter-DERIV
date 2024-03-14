@@ -680,7 +680,7 @@ sub mask_sensitive {
 
     my @sensitive_patterns = (
         qr/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, #Email
-        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/i, #Token or API key , = : value 
+        qr/\b(?:token|key|oauth[ _-]?token)\s*[:=]\s*([^\s]+)/, #Token or API key , = : value 
         qr/(?:a1|r1|ct1)-[a-zA-Z0-9]{29}/, #OAuth, Refresh, and CTrader token patterns
         qr/[a-zA-Z0-9]{15}/,  #API Token pattern
     );
