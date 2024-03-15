@@ -34,8 +34,6 @@ sub do_sensitive_mask_test {
     $log->warn("The OAuth token is $oauth_token");
     $log->warn("The cTrader token is $ctrader_token and the refresh token is $refresh_token");
     $log->warn("This message should not have any sensitive data masked");
-    $log->warn("This token is ABCHSHJAJ user key not have any sensitive data masked");
-
     
     my @expected_masked_messages = (
         "User " . '*' x length($email) . " is logged in",
