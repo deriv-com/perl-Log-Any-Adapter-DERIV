@@ -685,7 +685,6 @@ sub mask_sensitive {
         qr/\b[a-z0-9]{15}\b/i,                                   #API Token
     );
 
-
     try {
         foreach my $pattern (@sensitive_patterns) {
             $message =~ s/$pattern/'*' x length($&)/ge;
