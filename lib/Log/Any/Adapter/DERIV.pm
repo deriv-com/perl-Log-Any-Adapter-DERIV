@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 # AUTHORITY
-our $VERSION = '0.009';
+our $VERSION = '0.010';
 
 use feature qw(state);
 use parent qw(Log::Any::Adapter::Coderef);
